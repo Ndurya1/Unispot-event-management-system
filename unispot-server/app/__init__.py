@@ -1,0 +1,1 @@
+"""UniSpot backend application package."""

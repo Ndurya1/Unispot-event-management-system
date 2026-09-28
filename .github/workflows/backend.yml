@@ -1,0 +1,58 @@
+name: Backend checks
+
+on:
+  pull_request:
+    paths:
+      - "unispot-server/**"
+      - ".github/workflows/backend.yml"
+  push:
+    paths:
+      - "unispot-server/**"
+      - ".github/workflows/backend.yml"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: unispot-server
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: unispot_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d unispot_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/unispot_test
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/unispot_test
+      JWT_SECRET_KEY: ci-only-secret-that-is-at-least-32-characters
+      ALLOWED_ORIGINS: '["http://localhost:3000"]'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install Python
+        run: uv python install 3.13
+      - name: Install dependencies
+        run: uv sync --all-groups --locked
+      - name: Lint
+        run: uv run ruff check .
+      - name: Type check
+        run: uv run mypy app tests
+      - name: Verify migrations
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+      - name: Test
+        run: uv run pytest

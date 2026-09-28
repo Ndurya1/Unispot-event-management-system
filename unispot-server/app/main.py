@@ -1,0 +1,38 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.routes.health import router as health_router
+from app.core.config import Settings, get_settings
+from app.db.session import dispose_engine
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    yield
+    await dispose_engine()
+
+
+def create_application(settings: Settings | None = None) -> FastAPI:
+    app_settings = settings or get_settings()
+    application = FastAPI(
+        title=app_settings.app_name,
+        description="Automated venue discovery and booking for Kisii University",
+        version=app_settings.app_version,
+        lifespan=lifespan,
+    )
+    application.state.settings = app_settings
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin).rstrip("/") for origin in app_settings.allowed_origins],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    application.include_router(health_router)
+    return application
+
+
+app = create_application()
