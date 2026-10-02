@@ -9,7 +9,7 @@ def valid_settings_values() -> dict[str, object]:
         "APP_ENV": "test",
         "DATABASE_URL": "postgresql+asyncpg://postgres:postgres@localhost/unispot_test",
         "JWT_SECRET_KEY": "test-only-secret-that-is-at-least-32-characters",
-        "ALLOWED_ORIGINS": ["http://localhost:3000"],
+        "ALLOWED_ORIGINS": ["http://localhost:5173"],
     }
 
 

@@ -15,6 +15,11 @@ uv run alembic upgrade head
 uv run uvicorn app.main:app --reload
 ```
 
+The frontend development server runs on `http://localhost:5173` by default;
+that origin is included in the example CORS configuration. Set
+`TEST_DATABASE_URL` to an isolated PostgreSQL database when running the
+integration test locally.
+
 The example environment is deliberately local-only. Replace its database URL and
 JWT secret before using the application outside a test environment.
 
@@ -31,5 +36,5 @@ uv run alembic upgrade head
 PostgreSQL connection and returns HTTP 503 with a stable, non-sensitive error when
 the database is unavailable.
 
-Set `TEST_DATABASE_URL` to an isolated PostgreSQL database to run the integration
-database check locally. CI provides this automatically.
+CI provides `TEST_DATABASE_URL` automatically for the PostgreSQL-backed
+integration check.
