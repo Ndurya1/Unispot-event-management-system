@@ -10,9 +10,7 @@ from app.models.organization_membership import (
     MembershipStatus,
     OrganizationMembership,
 )
-from app.models.role import Role
 from app.models.user import User
-from app.models.user_role import UserRoles
 
 
 async def create_organization(

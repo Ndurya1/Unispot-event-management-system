@@ -3,22 +3,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies.database import get_db
 from app.api.dependencies.auth import require_system_admin
-from app.models.organization import OrganizationType, OrganizationStatus
-from app.models.organization_membership import MembershipRole
+from app.api.dependencies.database import get_db
 from app.schemas.organization import (
-    OrganizationCreate,
-    OrganizationResponse,
     MembershipCreate,
     MembershipResponse,
+    OrganizationCreate,
+    OrganizationResponse,
 )
 from app.services.organization_service import (
+    assign_membership,
     create_organization,
+    deactivate_membership,
     list_organizations,
     update_organization,
-    assign_membership,
-    deactivate_membership,
 )
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
@@ -31,8 +29,8 @@ router = APIRouter(prefix="/organizations", tags=["organizations"])
 )
 async def create(
     data: OrganizationCreate,
-    session: AsyncSession = Depends(get_db),
-    _: object = Depends(require_system_admin),
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+    _: object = Depends(require_system_admin),  # noqa: B008
 ):
     try:
         return await create_organization(
@@ -50,8 +48,8 @@ async def create(
 
 @router.get("", response_model=list[OrganizationResponse])
 async def list_all(
-    session: AsyncSession = Depends(get_db),
-    _: object = Depends(require_system_admin),
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+    _: object = Depends(require_system_admin),  # noqa: B008
 ):
     return await list_organizations(session)
 
@@ -63,8 +61,8 @@ async def list_all(
 async def update(
     organization_id: UUID,
     data: OrganizationCreate,
-    session: AsyncSession = Depends(get_db),
-    _: object = Depends(require_system_admin),
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+    _: object = Depends(require_system_admin),  # noqa: B008
 ):
     try:
         return await update_organization(
@@ -89,8 +87,8 @@ async def update(
 async def add_member(
     organization_id: UUID,
     data: MembershipCreate,
-    session: AsyncSession = Depends(get_db),
-    _: object = Depends(require_system_admin),
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+    _: object = Depends(require_system_admin),  # noqa: B008
 ):
     try:
         return await assign_membership(
@@ -112,8 +110,8 @@ async def add_member(
 )
 async def deactivate_member(
     membership_id: UUID,
-    session: AsyncSession = Depends(get_db),
-    _: object = Depends(require_system_admin),
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+    _: object = Depends(require_system_admin),  # noqa: B008
 ):
     try:
         return await deactivate_membership(
