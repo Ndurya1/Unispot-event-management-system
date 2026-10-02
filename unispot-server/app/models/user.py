@@ -1,20 +1,21 @@
 import uuid
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID, CITEXT
+from sqlalchemy import DateTime, String
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import CITEXT, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
 if TYPE_CHECKING:
-    from app.models.user_role import UserRoles
     from app.models.organization_membership import OrganizationMembership
+    from app.models.user_role import UserRoles
 
 
-class UserStatus(str, Enum):
+class UserStatus(StrEnum):
     ACTIVE = "ACTIVE"
     SUSPENDED = "SUSPENDED"
     DISABLED = "DISABLED"
