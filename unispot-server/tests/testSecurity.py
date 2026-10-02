@@ -13,7 +13,7 @@ from app.core.security import (
 )
 
 
-def main():
+def main() -> None:
     password = "TestPass123"
 
     # Hash password

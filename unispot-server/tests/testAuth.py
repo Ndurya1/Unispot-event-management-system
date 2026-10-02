@@ -3,9 +3,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.services.auth_services import login_user, register_user
-
 from app.db.session import SessionLocal
+from app.services.auth_service import login_user, register_user
 
 db = SessionLocal()
 
