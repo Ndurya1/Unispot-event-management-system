@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import require_system_admin
 from app.api.dependencies.database import get_db
+from app.models.organization import Organization
+from app.models.organization_membership import OrganizationMembership
 from app.schemas.organization import (
     MembershipCreate,
     MembershipResponse,
@@ -31,7 +33,7 @@ async def create(
     data: OrganizationCreate,
     session: AsyncSession = Depends(get_db),  # noqa: B008
     _: object = Depends(require_system_admin),  # noqa: B008
-):
+) -> Organization:
     try:
         return await create_organization(
             session,
@@ -50,7 +52,7 @@ async def create(
 async def list_all(
     session: AsyncSession = Depends(get_db),  # noqa: B008
     _: object = Depends(require_system_admin),  # noqa: B008
-):
+) -> list[Organization]:
     return await list_organizations(session)
 
 
@@ -63,7 +65,7 @@ async def update(
     data: OrganizationCreate,
     session: AsyncSession = Depends(get_db),  # noqa: B008
     _: object = Depends(require_system_admin),  # noqa: B008
-):
+) -> Organization:
     try:
         return await update_organization(
             session,
@@ -89,7 +91,7 @@ async def add_member(
     data: MembershipCreate,
     session: AsyncSession = Depends(get_db),  # noqa: B008
     _: object = Depends(require_system_admin),  # noqa: B008
-):
+) -> OrganizationMembership:
     try:
         return await assign_membership(
             session,
@@ -112,7 +114,7 @@ async def deactivate_member(
     membership_id: UUID,
     session: AsyncSession = Depends(get_db),  # noqa: B008
     _: object = Depends(require_system_admin),  # noqa: B008
-):
+) -> OrganizationMembership:
     try:
         return await deactivate_membership(
             session,

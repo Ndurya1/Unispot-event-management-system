@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.organization import Organization, OrganizationStatus
+from app.models.organization import Organization, OrganizationStatus, OrganizationType
 from app.models.organization_membership import (
     MembershipRole,
     MembershipStatus,
@@ -17,7 +17,7 @@ async def create_organization(
     session: AsyncSession,
     name: str,
     slug: str,
-    organization_type,
+    organization_type: OrganizationType,
 ) -> Organization:
     organization = Organization(
         name=name,
@@ -52,7 +52,7 @@ async def update_organization(
     organization_id: UUID,
     name: str | None = None,
     slug: str | None = None,
-    organization_type=None,
+    organization_type: OrganizationType | None = None,
     status: OrganizationStatus | None = None,
 ) -> Organization:
     result = await session.execute(
