@@ -11,7 +11,7 @@ os.environ.setdefault(
     "postgresql+asyncpg://postgres:postgres@localhost:5432/unispot_test",
 )
 os.environ.setdefault("JWT_SECRET_KEY", "test-only-secret-that-is-at-least-32-characters")
-os.environ.setdefault("ALLOWED_ORIGINS", '["http://localhost:3000"]')
+os.environ.setdefault("ALLOWED_ORIGINS", '["http://localhost:5173"]')
 
 from app.main import app  # noqa: E402
 

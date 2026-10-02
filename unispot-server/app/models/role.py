@@ -1,7 +1,7 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String
+from sqlalchemy import String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,16 +14,16 @@ if TYPE_CHECKING:
 class Role(Base):
     __tablename__ = "roles"
 
-    role_id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid4
+        server_default=text("gen_random_uuid()"),
     )
 
-    role_name: Mapped[str] = mapped_column(
+    name: Mapped[str] = mapped_column(
         String(80),
         unique=True,
-        nullable=False
+        nullable=False,
     )
 
     user_roles: Mapped[list["UserRoles"]] = relationship(

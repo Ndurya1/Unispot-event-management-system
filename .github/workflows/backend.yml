@@ -35,7 +35,7 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/unispot_test
       TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/unispot_test
       JWT_SECRET_KEY: ci-only-secret-that-is-at-least-32-characters
-      ALLOWED_ORIGINS: '["http://localhost:3000"]'
+      ALLOWED_ORIGINS: '["http://localhost:5173"]'
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
