@@ -1,16 +1,43 @@
-# React + Vite
+# UniSpot
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+UniSpot is a single React platform for discovering campus venues, managing
+events, and providing dashboards for the platform's users. Its backend is a
+separate FastAPI service in `unispot-server`.
 
-Currently, two official plugins are available:
+## Repository structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```text
+.
+├── src/                 # React application
+├── public/              # Frontend static assets
+├── package.json         # Frontend scripts and dependencies
+├── unispot-server/      # FastAPI backend and backend tests
+├── Docs/                # Product and implementation documentation
+└── .github/             # Repository workflows
+```
 
-## React Compiler
+The frontend intentionally lives at the repository root because UniSpot is a
+single frontend application. It can grow into multiple pages and dashboards
+without needing a separate `frontend/` directory. The backend keeps its own
+Python environment and should be run from `unispot-server`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Frontend setup
 
-## Expanding the ESLint configuration
+Prerequisites: Node.js and npm.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```powershell
+npm install
+npm run dev
+```
+
+Other frontend checks:
+
+```powershell
+npm run lint
+npm run build
+```
+
+## Backend setup
+
+See [`unispot-server/README.md`](unispot-server/README.md) for Python,
+PostgreSQL, migration, and API instructions.
