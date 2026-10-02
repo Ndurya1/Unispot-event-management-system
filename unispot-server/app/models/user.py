@@ -73,8 +73,4 @@ class User(Base):
         cascade="all, delete-orphan"
     )
 
-    organisation: Mapped[list["OrganizationMembership"]] = relationship(
-        "OrganizationMembership",
-        back_populates="user",
-        cascade="all, delete-orphan"
     )
