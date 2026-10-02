@@ -11,7 +11,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
-    from app.models.organization_membership import OrganizationMembership
     from app.models.user_role import UserRoles
 
 
