@@ -5,11 +5,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 from app.core.security import (
-    hash_password,
-    verify_password,
     create_access_token,
     create_refresh_token,
-    verify_access_token
+    hash_password,
+    verify_access_token,
+    verify_password,
 )
 
 

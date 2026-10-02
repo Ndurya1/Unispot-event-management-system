@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import jwt
 from sqlalchemy import select
@@ -38,7 +38,7 @@ async def login_user(
         raise ValueError("Invalid email or password")
 
     # Record successful login
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
 
     access_token = create_access_token(
         {

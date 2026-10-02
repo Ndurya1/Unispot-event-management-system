@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import jwt
@@ -6,7 +6,6 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
 from app.core.config import get_settings
-
 
 password_hasher = PasswordHasher()
 
@@ -29,7 +28,7 @@ def _create_token(
 ) -> str:
     settings = get_settings()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     data = payload.copy()
     data.update(
