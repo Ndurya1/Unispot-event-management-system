@@ -4,7 +4,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.bookings import router as bookings_router
 from app.api.routes.health import router as health_router
+from app.api.routes.users import router as users_router
+from app.api.routes.venues import router as venues_router
 from app.core.config import Settings, get_settings
 from app.db.session import dispose_engine
 
@@ -17,21 +20,32 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 def create_application(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or get_settings()
+
     application = FastAPI(
         title=app_settings.app_name,
         description="Automated venue discovery and booking for Kisii University",
         version=app_settings.app_version,
         lifespan=lifespan,
     )
+
     application.state.settings = app_settings
+
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin).rstrip("/") for origin in app_settings.allowed_origins],
+        allow_origins=[
+            str(origin).rstrip("/")
+            for origin in app_settings.allowed_origins
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
     application.include_router(health_router)
+    application.include_router(users_router)
+    application.include_router(venues_router)
+    application.include_router(bookings_router)
+
     return application
 
 

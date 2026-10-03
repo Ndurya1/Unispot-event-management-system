@@ -1,7 +1,9 @@
 from collections.abc import AsyncIterator
+
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import DatabaseUnavailableError
@@ -19,6 +21,7 @@ async def require_database_connection(
     try:
         await check_database_connection(session)
     except DatabaseUnavailableError as error:
+        print("DATABASE ERROR:", repr(error))
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
