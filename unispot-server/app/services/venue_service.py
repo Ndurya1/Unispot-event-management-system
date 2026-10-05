@@ -6,6 +6,8 @@ from sqlalchemy import and_, exists, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
+from app.models.booking import BookingSource
 from app.models.facility import Facility, VenueFacility
 from app.models.reservation import ReservationType, VenueReservation
 from app.models.venue import Venue, VenueStatus
@@ -18,12 +20,26 @@ def _venue_code(name: str) -> str:
     return (code or "VENUE")[:40]
 
 
-async def create_venue(session: AsyncSession, **values: object) -> Venue:
+async def create_venue(
+    session: AsyncSession, *, actor_id: UUID | None = None, **values: object
+) -> Venue:
     if not values.get("code"):
         values["code"] = _venue_code(str(values["name"]))
     venue = Venue(**values)
     session.add(venue)
     try:
+        await session.flush()
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_id,
+                actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+                action="VENUE_CREATED",
+                target_type="VENUE",
+                target_id=venue.id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+            )
+        )
         await session.commit()
     except IntegrityError as error:
         await session.rollback()
@@ -58,11 +74,25 @@ async def get_venue(session: AsyncSession, venue_id: UUID) -> Venue | None:
     return await session.get(Venue, venue_id)
 
 
-async def update_venue(session: AsyncSession, venue: Venue, **values: object) -> Venue:
+async def update_venue(
+    session: AsyncSession, venue: Venue, *, actor_id: UUID | None = None, **values: object
+) -> Venue:
     for key, value in values.items():
         if value is not None:
             setattr(venue, key, value)
     try:
+        venue.updated_at = datetime.now().astimezone()
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_id,
+                actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+                action="VENUE_UPDATED",
+                target_type="VENUE",
+                target_id=venue.id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+            )
+        )
         await session.commit()
     except IntegrityError as error:
         await session.rollback()
@@ -71,10 +101,24 @@ async def update_venue(session: AsyncSession, venue: Venue, **values: object) ->
     return venue
 
 
-async def create_facility(session: AsyncSession, name: str) -> Facility:
+async def create_facility(
+    session: AsyncSession, name: str, *, actor_id: UUID | None = None
+) -> Facility:
     facility = Facility(name=name)
     session.add(facility)
     try:
+        await session.flush()
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_id,
+                actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+                action="FACILITY_CREATED",
+                target_type="FACILITY",
+                target_id=facility.id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+            )
+        )
         await session.commit()
     except IntegrityError as error:
         await session.rollback()
@@ -88,12 +132,25 @@ async def list_facilities(session: AsyncSession) -> list[Facility]:
     return list(result.scalars().all())
 
 
-async def update_facility(session: AsyncSession, facility_id: UUID, name: str) -> Facility:
+async def update_facility(
+    session: AsyncSession, facility_id: UUID, name: str, *, actor_id: UUID | None = None
+) -> Facility:
     facility = await session.get(Facility, facility_id)
     if facility is None:
         raise ValueError("Facility not found")
     facility.name = name
     try:
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_id,
+                actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+                action="FACILITY_UPDATED",
+                target_type="FACILITY",
+                target_id=facility.id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+            )
+        )
         await session.commit()
     except IntegrityError as error:
         await session.rollback()
@@ -198,6 +255,19 @@ async def create_block(
     )
     session.add(block)
     try:
+        await session.flush()
+        session.add(
+            AuditEvent(
+                actor_user_id=created_by,
+                actor_type=ActorType.USER,
+                action="BLOCK_CREATED",
+                target_type="BLOCK",
+                target_id=block.id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+                event_metadata={"reason": reason},
+            )
+        )
         await session.commit()
     except IntegrityError as error:
         await session.rollback()
@@ -206,7 +276,9 @@ async def create_block(
     return block
 
 
-async def cancel_block(session: AsyncSession, block_id: UUID) -> VenueBlock:
+async def cancel_block(
+    session: AsyncSession, block_id: UUID, *, actor_id: UUID | None = None
+) -> VenueBlock:
     block = await session.get(VenueBlock, block_id)
     if block is None:
         raise ValueError("Block not found")
@@ -217,6 +289,17 @@ async def cancel_block(session: AsyncSession, block_id: UUID) -> VenueBlock:
     reservation = await session.get(VenueReservation, block.reservation_id)
     if reservation is not None:
         reservation.active = False
+    session.add(
+        AuditEvent(
+            actor_user_id=actor_id,
+            actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+            action="BLOCK_CANCELLED",
+            target_type="BLOCK",
+            target_id=block.id,
+            channel=BookingSource.WEB,
+            outcome=AuditOutcome.SUCCEEDED,
+        )
+    )
     await session.commit()
     await session.refresh(block)
     return block

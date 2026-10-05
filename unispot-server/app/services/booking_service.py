@@ -7,8 +7,15 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
 from app.models.booking import Booking, BookingSource, IdempotencyKey
 from app.models.booking_event import BookingEvent, BookingEventType
+from app.models.notification import (
+    DeliveryStatus,
+    Notification,
+    NotificationChannel,
+    NotificationType,
+)
 from app.models.reservation import ReservationType, VenueReservation
 from app.models.user import User
 from app.models.venue import Venue
@@ -123,6 +130,29 @@ async def create_booking(
                 )
             )
             session.add(
+                Notification(
+                    user_id=requester.id,
+                    booking_id=booking.id,
+                    type=NotificationType.CONFIRMED,
+                    channel=NotificationChannel.IN_APP,
+                    title="Booking confirmed",
+                    body=f"Booking {booking.confirmation_code} has been confirmed.",
+                    delivery_status=DeliveryStatus.PENDING,
+                )
+            )
+            session.add(
+                AuditEvent(
+                    actor_user_id=requester.id,
+                    actor_type=ActorType.USER,
+                    action="BOOKING_CREATED",
+                    target_type="BOOKING",
+                    target_id=booking.id,
+                    channel=source,
+                    outcome=AuditOutcome.SUCCEEDED,
+                    event_metadata={"confirmation_code": booking.confirmation_code},
+                )
+            )
+            session.add(
                 IdempotencyKey(
                     user_id=requester.id,
                     operation="create_booking",
@@ -135,15 +165,61 @@ async def create_booking(
             )
             await session.flush()
             return booking
+    except BookingPolicyError as error:
+        await session.rollback()
+        await _record_failed_booking_audit(
+            session,
+            requester_id=requester.id,
+            venue_id=data.venue_id,
+            source=source,
+            action="BOOKING_DENIED",
+            metadata={"violations": [item.code for item in error.violations]},
+        )
+        raise
     except IntegrityError as error:
         await session.rollback()
         if "ex_venue_reservation_time" in str(error.orig):
+            await _record_failed_booking_audit(
+                session,
+                requester_id=requester.id,
+                venue_id=data.venue_id,
+                source=source,
+                action="BOOKING_CONFLICT",
+                metadata={"reason": "occupied_interval"},
+            )
             raise BookingConflictError(
                 "The requested venue interval is no longer available"
             ) from error
         if "idempotency" in str(error.orig).lower():
             raise IdempotencyConflictError("The idempotency key is already being used") from error
         raise
+
+
+async def _record_failed_booking_audit(
+    session: AsyncSession,
+    *,
+    requester_id: UUID,
+    venue_id: UUID,
+    source: BookingSource,
+    action: str,
+    metadata: dict[str, object],
+) -> None:
+    try:
+        session.add(
+            AuditEvent(
+                actor_user_id=requester_id,
+                actor_type=ActorType.USER,
+                action=action,
+                target_type="VENUE",
+                target_id=venue_id,
+                channel=source,
+                outcome=AuditOutcome.DENIED,
+                event_metadata=metadata,
+            )
+        )
+        await session.commit()
+    except Exception:
+        await session.rollback()
 
 
 def _request_hash(data: BookingCreate) -> str:

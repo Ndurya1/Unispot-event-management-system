@@ -1,3 +1,6 @@
+from app.models.audit_event import ActorType as ActorType
+from app.models.audit_event import AuditEvent as AuditEvent
+from app.models.audit_event import AuditOutcome as AuditOutcome
 from app.models.booking import Booking as Booking
 from app.models.booking import BookingSource as BookingSource
 from app.models.booking import BookingStatus as BookingStatus
@@ -6,6 +9,10 @@ from app.models.booking_event import BookingEvent as BookingEvent
 from app.models.booking_event import BookingEventType as BookingEventType
 from app.models.facility import Facility as Facility
 from app.models.facility import VenueFacility as VenueFacility
+from app.models.notification import DeliveryStatus as DeliveryStatus
+from app.models.notification import Notification as Notification
+from app.models.notification import NotificationChannel as NotificationChannel
+from app.models.notification import NotificationType as NotificationType
 from app.models.organization import Organization as Organization
 from app.models.organization import OrganizationStatus as OrganizationStatus
 from app.models.organization import OrganizationType as OrganizationType

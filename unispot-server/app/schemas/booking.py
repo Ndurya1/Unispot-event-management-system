@@ -48,3 +48,33 @@ class BookingResponse(BaseModel):
 class PolicyViolationResponse(BaseModel):
     code: str
     message: str
+
+
+class BookingCancelRequest(BaseModel):
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class AllocationResponse(BaseModel):
+    id: UUID
+    venue_id: UUID
+    venue_name: str
+    starts_at: datetime
+    ends_at: datetime
+    expected_attendance: int
+    status: BookingStatus
+    confirmation_code: str
+
+
+class NotificationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    booking_id: UUID | None
+    type: str
+    channel: str
+    title: str
+    body: str
+    delivery_status: str
+    created_at: datetime
+    sent_at: datetime | None
+    read_at: datetime | None
