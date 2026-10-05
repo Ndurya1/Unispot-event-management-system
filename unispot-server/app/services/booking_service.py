@@ -7,8 +7,15 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
 from app.models.booking import Booking, BookingSource, IdempotencyKey
 from app.models.booking_event import BookingEvent, BookingEventType
+from app.models.notification import (
+    DeliveryStatus,
+    Notification,
+    NotificationChannel,
+    NotificationType,
+)
 from app.models.reservation import ReservationType, VenueReservation
 from app.models.user import User
 from app.models.venue import Venue
@@ -120,6 +127,29 @@ async def create_booking(
                     event_type=BookingEventType.CONFIRMED,
                     actor_user_id=requester.id,
                     source=source,
+                )
+            )
+            session.add(
+                Notification(
+                    user_id=requester.id,
+                    booking_id=booking.id,
+                    type=NotificationType.CONFIRMED,
+                    channel=NotificationChannel.IN_APP,
+                    title="Booking confirmed",
+                    body=f"Booking {booking.confirmation_code} has been confirmed.",
+                    delivery_status=DeliveryStatus.PENDING,
+                )
+            )
+            session.add(
+                AuditEvent(
+                    actor_user_id=requester.id,
+                    actor_type=ActorType.USER,
+                    action="BOOKING_CREATED",
+                    target_type="BOOKING",
+                    target_id=booking.id,
+                    channel=source,
+                    outcome=AuditOutcome.SUCCEEDED,
+                    event_metadata={"confirmation_code": booking.confirmation_code},
                 )
             )
             session.add(
