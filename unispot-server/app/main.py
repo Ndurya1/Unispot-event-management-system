@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.availability import router as availability_router
+from app.api.routes.bookings import router as bookings_router
 from app.api.routes.facilities import router as facilities_router
 from app.api.routes.health import router as health_router
 from app.api.routes.organizations import router as organizations_router
@@ -40,6 +41,7 @@ def create_application(settings: Settings | None = None) -> FastAPI:
     application.include_router(venues_router)
     application.include_router(facilities_router)
     application.include_router(availability_router)
+    application.include_router(bookings_router)
     return application
 
 
