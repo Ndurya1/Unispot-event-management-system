@@ -75,7 +75,7 @@ jobs:
       - name: Validate compose configuration
         run: docker compose config --quiet
       - name: Build and start API, migrations, database and worker
-        run: docker compose up --build --wait --wait-timeout 180
+        run: docker compose up --build --wait --wait-timeout 180 api worker
       - name: Verify non-root runtime, readiness and worker
         run: |
           test "$(docker compose exec -T api id -u)" != "0"

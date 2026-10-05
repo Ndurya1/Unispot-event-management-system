@@ -67,7 +67,7 @@ Never use `alembic downgrade base` against retained application data.
 Copy-Item .env.compose.example .env.compose
 # Edit placeholders. DATABASE_URL must use host postgres, not localhost.
 docker compose --env-file .env.compose config --quiet
-docker compose --env-file .env.compose up --build --wait --wait-timeout 180
+docker compose --env-file .env.compose up --build --wait --wait-timeout 180 api worker
 docker compose --env-file .env.compose logs --tail 100 api worker migrate
 docker compose --env-file .env.compose exec api alembic current
 docker compose --env-file .env.compose down
