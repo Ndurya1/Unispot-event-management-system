@@ -2,7 +2,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime, time, timedelta
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.assistant import (
@@ -133,6 +133,29 @@ async def record_tool_call(
     )
     await session.flush()
     return tool_call
+
+
+async def purge_expired_conversations(
+    session: AsyncSession, *, now: datetime | None = None
+) -> int:
+    """Delete conversations past retention without exposing their contents."""
+    cutoff = now or datetime.now(UTC)
+    count = await session.scalar(
+        select(func.count())
+        .select_from(Conversation)
+        .where(
+            Conversation.retention_until.is_not(None),
+            Conversation.retention_until <= cutoff,
+        )
+    )
+    await session.execute(
+        delete(Conversation).where(
+            Conversation.retention_until.is_not(None),
+            Conversation.retention_until <= cutoff,
+        )
+    )
+    await session.commit()
+    return int(count or 0)
 
 
 def _is_sensitive_key(key: str) -> bool:

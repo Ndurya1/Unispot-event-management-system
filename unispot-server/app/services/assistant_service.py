@@ -73,6 +73,8 @@ async def process_assistant_message(
             )
             invocations = plan.tool_calls
             provider_response = plan.response
+            if plan.state_patch:
+                conversation.state = {**conversation.state, **plan.state_patch}
         except Exception:
             provider_response = (
                 "The assistant is temporarily unavailable. You can continue using "
@@ -231,9 +233,15 @@ def _success_message(name: ToolName, data: dict[str, object]) -> str:
     if name is ToolName.SEARCH_VENUES:
         return f"I found {_count(data.get('venues'))} matching venue(s)."
     if name is ToolName.CHECK_AVAILABILITY:
+        count = _count(data.get("available_venues"))
+        if count == 0:
+            return (
+                "No venue is available for that interval. Try a nearby time or "
+                "adjust the capacity or location filters."
+            )
         return (
             "I found "
-            f"{_count(data.get('available_venues'))} available venue(s) for that interval."
+            f"{count} available venue(s) for that interval."
         )
     if name is ToolName.LIST_MY_BOOKINGS:
         return f"I found {_count(data.get('bookings'))} booking(s) belonging to you."
