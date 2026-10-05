@@ -1,3 +1,8 @@
+from app.models.assistant import AssistantToolCall as AssistantToolCall
+from app.models.assistant import AssistantToolCallStatus as AssistantToolCallStatus
+from app.models.assistant import Conversation as Conversation
+from app.models.assistant import ConversationMessage as ConversationMessage
+from app.models.assistant import ConversationMessageRole as ConversationMessageRole
 from app.models.audit_event import ActorType as ActorType
 from app.models.audit_event import AuditEvent as AuditEvent
 from app.models.audit_event import AuditOutcome as AuditOutcome

@@ -48,6 +48,9 @@ async def create_booking(
     # get_current_user has already read from this session.  End that read-only
     # transaction before starting the atomic booking transaction.
     await session.rollback()
+    # Rollback expires ORM instances even when expire_on_commit is disabled.
+    # Reload the authenticated requester before policy validation and audit.
+    await session.refresh(requester)
 
     try:
         async with session.begin():
