@@ -1,3 +1,9 @@
+from app.models.booking import Booking as Booking
+from app.models.booking import BookingSource as BookingSource
+from app.models.booking import BookingStatus as BookingStatus
+from app.models.booking import IdempotencyKey as IdempotencyKey
+from app.models.booking_event import BookingEvent as BookingEvent
+from app.models.booking_event import BookingEventType as BookingEventType
 from app.models.facility import Facility as Facility
 from app.models.facility import VenueFacility as VenueFacility
 from app.models.organization import Organization as Organization
