@@ -4,8 +4,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.availability import router as availability_router
+from app.api.routes.facilities import router as facilities_router
 from app.api.routes.health import router as health_router
 from app.api.routes.organizations import router as organizations_router
+from app.api.routes.venues import router as venues_router
 from app.core.config import Settings, get_settings
 from app.db.session import dispose_engine
 
@@ -34,6 +37,9 @@ def create_application(settings: Settings | None = None) -> FastAPI:
     )
     application.include_router(health_router)
     application.include_router(organizations_router)
+    application.include_router(venues_router)
+    application.include_router(facilities_router)
+    application.include_router(availability_router)
     return application
 
 

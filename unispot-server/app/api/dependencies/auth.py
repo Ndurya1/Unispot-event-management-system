@@ -73,3 +73,23 @@ async def require_system_admin(
         )
 
     return current_user
+
+
+async def require_venue_admin(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> User:
+    result = await session.execute(
+        select(Role.name)
+        .join(UserRoles, UserRoles.role_id == Role.id)
+        .where(
+            UserRoles.user_id == current_user.id,
+            Role.name.in_(["VENUE_ADMIN", "SYSTEM_ADMIN"]),
+        )
+    )
+    if result.scalar_one_or_none() is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Venue administrator privileges required",
+        )
+    return current_user
