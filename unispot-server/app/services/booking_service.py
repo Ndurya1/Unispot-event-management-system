@@ -165,15 +165,61 @@ async def create_booking(
             )
             await session.flush()
             return booking
+    except BookingPolicyError as error:
+        await session.rollback()
+        await _record_failed_booking_audit(
+            session,
+            requester_id=requester.id,
+            venue_id=data.venue_id,
+            source=source,
+            action="BOOKING_DENIED",
+            metadata={"violations": [item.code for item in error.violations]},
+        )
+        raise
     except IntegrityError as error:
         await session.rollback()
         if "ex_venue_reservation_time" in str(error.orig):
+            await _record_failed_booking_audit(
+                session,
+                requester_id=requester.id,
+                venue_id=data.venue_id,
+                source=source,
+                action="BOOKING_CONFLICT",
+                metadata={"reason": "occupied_interval"},
+            )
             raise BookingConflictError(
                 "The requested venue interval is no longer available"
             ) from error
         if "idempotency" in str(error.orig).lower():
             raise IdempotencyConflictError("The idempotency key is already being used") from error
         raise
+
+
+async def _record_failed_booking_audit(
+    session: AsyncSession,
+    *,
+    requester_id: UUID,
+    venue_id: UUID,
+    source: BookingSource,
+    action: str,
+    metadata: dict[str, object],
+) -> None:
+    try:
+        session.add(
+            AuditEvent(
+                actor_user_id=requester_id,
+                actor_type=ActorType.USER,
+                action=action,
+                target_type="VENUE",
+                target_id=venue_id,
+                channel=source,
+                outcome=AuditOutcome.DENIED,
+                event_metadata=metadata,
+            )
+        )
+        await session.commit()
+    except Exception:
+        await session.rollback()
 
 
 def _request_hash(data: BookingCreate) -> str:

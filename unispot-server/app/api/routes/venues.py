@@ -40,10 +40,10 @@ router = APIRouter(prefix="/venues", tags=["venues"])
 async def create(
     data: VenueCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> Venue:
     try:
-        return await create_venue(session, **data.model_dump())
+        return await create_venue(session, actor_id=current_user.id, **data.model_dump())
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
 
@@ -78,13 +78,18 @@ async def update(
     venue_id: UUID,
     data: VenueUpdate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> Venue:
     venue = await get_venue(session, venue_id)
     if venue is None:
         raise HTTPException(status_code=404, detail="Venue not found")
     try:
-        return await update_venue(session, venue, **data.model_dump(exclude_unset=True))
+        return await update_venue(
+            session,
+            venue,
+            actor_id=current_user.id,
+            **data.model_dump(exclude_unset=True),
+        )
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
 
@@ -164,9 +169,9 @@ async def add_block(
 async def cancel(
     block_id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> VenueBlock:
     try:
-        return await cancel_block(session, block_id)
+        return await cancel_block(session, block_id, actor_id=current_user.id)
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error

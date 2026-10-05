@@ -23,10 +23,10 @@ router = APIRouter(prefix="/facilities", tags=["facilities"])
 async def create(
     data: FacilityCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> Facility:
     try:
-        return await create_facility(session, data.name)
+        return await create_facility(session, data.name, actor_id=current_user.id)
     except ValueError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
 
@@ -41,10 +41,12 @@ async def update(
     facility_id: UUID,
     data: FacilityCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> Facility:
     try:
-        return await update_facility(session, facility_id, data.name)
+        return await update_facility(
+            session, facility_id, data.name, actor_id=current_user.id
+        )
     except ValueError as error:
         code = 409 if "already" in str(error) else 404
         raise HTTPException(status_code=code, detail=str(error)) from error
