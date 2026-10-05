@@ -14,7 +14,7 @@ from app.core.observability import install_database_metrics
 settings = get_settings()
 
 engine: AsyncEngine = create_async_engine(
-    settings.database_url,
+    settings.database_url.get_secret_value(),
     pool_pre_ping=True,
     hide_parameters=True,
     connect_args={"server_settings": {"statement_timeout": "10000", "lock_timeout": "5000"}},

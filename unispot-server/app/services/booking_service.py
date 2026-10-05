@@ -23,12 +23,17 @@ from app.models.venue import Venue
 from app.schemas.booking import BookingCreate
 from app.services.booking_policy import BookingPolicyError, validate_booking_policy
 from app.services.idempotency import lock_idempotency_key
+from app.services.venue_service import find_available_venues
 
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
 
 
 class BookingConflictError(ValueError):
     """Raised when PostgreSQL rejects an overlapping occupied interval."""
+
+    def __init__(self, message: str, alternatives: list[dict[str, object]] | None = None) -> None:
+        super().__init__(message)
+        self.alternatives = alternatives or []
 
 
 class IdempotencyConflictError(ValueError):
@@ -191,6 +196,26 @@ async def create_booking(
         await session.rollback()
         if "ex_venue_reservation_time" in str(error.orig):
             metrics.add("booking_conflicts_total")
+            alternatives: list[dict[str, object]] = []
+            try:
+                alternatives = [
+                    {
+                        "id": str(alternative.id),
+                        "name": alternative.name,
+                        "code": alternative.code,
+                        "location": alternative.location,
+                        "capacity": alternative.capacity,
+                    }
+                    for alternative in await find_available_venues(
+                        session,
+                        data.starts_at,
+                        data.ends_at,
+                        capacity=data.expected_attendance,
+                        limit=5,
+                    )
+                ]
+            except Exception:
+                alternatives = []
             await _record_failed_booking_audit(
                 session,
                 requester_id=requester_id,
@@ -200,7 +225,7 @@ async def create_booking(
                 metadata={"reason": "occupied_interval"},
             )
             raise BookingConflictError(
-                "The requested venue interval is no longer available"
+                "The requested venue interval is no longer available", alternatives
             ) from error
         if "idempotency" in str(error.orig).lower():
             raise IdempotencyConflictError("The idempotency key is already being used") from error

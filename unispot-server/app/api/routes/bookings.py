@@ -71,7 +71,14 @@ async def create(
             detail=[{"code": item.code, "message": item.message} for item in error.violations],
         ) from error
     except BookingConflictError as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "booking_conflict",
+                "message": str(error),
+                "details": [{"code": "alternative_venues", "venues": error.alternatives}],
+            },
+        ) from error
     except IdempotencyConflictError as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
     except ValueError as error:

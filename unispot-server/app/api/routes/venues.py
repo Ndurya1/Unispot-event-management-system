@@ -107,10 +107,12 @@ async def add_facility(
     venue_id: UUID,
     data: VenueFacilityCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> object:
     try:
-        return await link_facility(session, venue_id, data.facility_id, data.notes)
+        return await link_facility(
+            session, venue_id, data.facility_id, data.notes, actor_id=current_user.id
+        )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
 
@@ -124,11 +126,16 @@ async def add_hours(
     venue_id: UUID,
     data: OperatingHoursCreate,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> VenueOperatingHours:
     try:
         return await add_operating_hours(
-            session, venue_id, data.day_of_week, data.opens_at, data.closes_at
+            session,
+            venue_id,
+            data.day_of_week,
+            data.opens_at,
+            data.closes_at,
+            actor_id=current_user.id,
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error

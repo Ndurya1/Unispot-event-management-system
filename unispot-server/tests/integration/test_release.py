@@ -14,6 +14,7 @@ from fastapi import HTTPException
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.api.dependencies.database import get_db
@@ -469,6 +470,22 @@ async def test_business_rule_boundaries(release_db: async_sessionmaker[AsyncSess
         assert "minimum_lead_time" in {v.code for v in too_soon.value.violations}
 
 
+async def test_booking_requires_organizer_membership(
+    release_db: async_sessionmaker[AsyncSession],
+) -> None:
+    user_id, data = await seed(release_db)
+    async with release_db() as session:
+        membership = await session.scalar(
+            select(OrganizationMembership).where(OrganizationMembership.user_id == user_id)
+        )
+        assert membership is not None
+        membership.membership_role = MembershipRole.MEMBER
+        await session.commit()
+    with pytest.raises(BookingPolicyError) as denied:
+        await book(release_db, user_id, data, "member-cannot-book")
+    assert "organization_membership_required" in {v.code for v in denied.value.violations}
+
+
 async def test_invalid_replacement_revokes_old_confirmation(
     release_db: async_sessionmaker[AsyncSession],
 ) -> None:
@@ -606,9 +623,23 @@ async def test_http_login_booking_audit_admin_and_cancellation(
             "/auth/login", json={"email": email, "password": "release-test-password"}
         )
         assert login.status_code == 200, login.text
+        refreshed = await client.post(
+            "/auth/refresh", json={"refresh_token": login.json()["refresh_token"]}
+        )
+        assert refreshed.status_code == 200
         client.headers["Authorization"] = "Bearer " + login.json()["access_token"]
         assert (await client.get("/admin/metrics")).status_code == 403
         assert (await client.get("/admin/allocations")).status_code == 403
+        async with release_db() as session:
+            denied_access = await session.scalar(
+                select(func.count())
+                .select_from(AuditEvent)
+                .where(
+                    AuditEvent.actor_user_id == user_id,
+                    AuditEvent.action == "AUTHORIZATION_DENIED",
+                )
+            )
+            assert denied_access is not None and denied_access >= 2
         request_id = str(uuid4())
         created = await client.post(
             "/bookings",
@@ -632,6 +663,10 @@ async def test_http_login_booking_audit_admin_and_cancellation(
                 )
             )
             assert event is not None and str(event.request_id) == request_id
+            event.action = "TAMPERED"
+            with pytest.raises(DBAPIError):
+                await session.commit()
+            await session.rollback()
             for name in ("VENUE_ADMIN", "SYSTEM_ADMIN"):
                 role = await session.scalar(select(Role).where(Role.name == name))
                 if role is None:
@@ -639,7 +674,24 @@ async def test_http_login_booking_audit_admin_and_cancellation(
                     session.add(role)
                     await session.flush()
                 session.add(UserRoles(user_id=user_id, role_id=role.id))
+            managed_user = User(
+                full_name="Managed account",
+                email=f"managed-{uuid4()}@example.com",
+                status=UserStatus.ACTIVE,
+            )
+            session.add(managed_user)
             await session.commit()
+            managed_id = managed_user.id
+        managed_status = await client.patch(
+            f"/admin/users/{managed_id}/status", json={"status": "SUSPENDED"}
+        )
+        assert managed_status.status_code == 200
+        managed_role = await client.post(
+            f"/admin/users/{managed_id}/roles", json={"role_name": "ORGANIZER"}
+        )
+        assert managed_role.status_code == 204
+        removed_role = await client.delete(f"/admin/users/{managed_id}/roles/ORGANIZER")
+        assert removed_role.status_code == 204
         allocations = await client.get("/admin/allocations")
         assert allocations.status_code == 200
         assert str(booking_id) in {row["id"] for row in allocations.json()}
@@ -676,3 +728,13 @@ async def test_http_login_booking_audit_admin_and_cancellation(
                 "/auth/login", json={"email": email, "password": "release-test-password"}
             )
         ).status_code == 401
+        async with release_db() as session:
+            failed_login = await session.scalar(
+                select(func.count())
+                .select_from(AuditEvent)
+                .where(
+                    AuditEvent.actor_user_id == user_id,
+                    AuditEvent.action == "LOGIN_FAILED",
+                )
+            )
+            assert failed_login is not None and failed_login >= 1

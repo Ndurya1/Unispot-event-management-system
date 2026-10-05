@@ -170,11 +170,24 @@ async def update_facility(
     return facility
 
 
-async def delete_facility(session: AsyncSession, facility_id: UUID) -> None:
+async def delete_facility(
+    session: AsyncSession, facility_id: UUID, *, actor_id: UUID | None = None
+) -> None:
     facility = await session.get(Facility, facility_id)
     if facility is None:
         raise ValueError("Facility not found")
     try:
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_id,
+                actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+                action="FACILITY_DELETED",
+                target_type="FACILITY",
+                target_id=facility.id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+            )
+        )
         await session.delete(facility)
         await session.commit()
     except IntegrityError as error:
@@ -183,7 +196,12 @@ async def delete_facility(session: AsyncSession, facility_id: UUID) -> None:
 
 
 async def link_facility(
-    session: AsyncSession, venue_id: UUID, facility_id: UUID, notes: str | None
+    session: AsyncSession,
+    venue_id: UUID,
+    facility_id: UUID,
+    notes: str | None,
+    *,
+    actor_id: UUID | None = None,
 ) -> VenueFacility:
     if await session.get(Venue, venue_id) is None:
         raise ValueError("Venue not found")
@@ -192,6 +210,19 @@ async def link_facility(
     link = VenueFacility(venue_id=venue_id, facility_id=facility_id, notes=notes)
     session.add(link)
     try:
+        await session.flush()
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_id,
+                actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+                action="FACILITY_LINKED",
+                target_type="VENUE",
+                target_id=venue_id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+                event_metadata={"facility_id": str(facility_id)},
+            )
+        )
         await session.commit()
     except IntegrityError as error:
         await session.rollback()
@@ -201,7 +232,13 @@ async def link_facility(
 
 
 async def add_operating_hours(
-    session: AsyncSession, venue_id: UUID, day_of_week: int, opens_at: object, closes_at: object
+    session: AsyncSession,
+    venue_id: UUID,
+    day_of_week: int,
+    opens_at: object,
+    closes_at: object,
+    *,
+    actor_id: UUID | None = None,
 ) -> VenueOperatingHours:
     if await session.get(Venue, venue_id) is None:
         raise ValueError("Venue not found")
@@ -213,6 +250,19 @@ async def add_operating_hours(
     )
     session.add(hours)
     try:
+        await session.flush()
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_id,
+                actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+                action="OPERATING_HOURS_CREATED",
+                target_type="VENUE",
+                target_id=venue_id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.SUCCEEDED,
+                event_metadata={"day_of_week": day_of_week},
+            )
+        )
         await session.commit()
     except IntegrityError as error:
         await session.rollback()

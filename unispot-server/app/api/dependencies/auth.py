@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies.database import get_db
 from app.core.observability import actor_context
 from app.core.security import verify_access_token
+from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
+from app.models.booking import BookingSource
 from app.models.role import Role
 from app.models.user import User, UserStatus
 from app.models.user_role import UserRoles
@@ -35,6 +37,7 @@ async def get_current_user(
             )
 
     except (jwt.InvalidTokenError, ValueError) as error:
+        await _record_denied_auth(session, "AUTHENTICATION_FAILED")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
@@ -45,6 +48,11 @@ async def get_current_user(
     user = result.scalar_one_or_none()
 
     if user is None or user.status != UserStatus.ACTIVE:
+        await _record_denied_auth(
+            session,
+            "AUTHENTICATION_FAILED",
+            actor_user_id=user.id if user is not None else None,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
@@ -68,12 +76,33 @@ async def require_system_admin(
     )
 
     if result.scalars().first() is None:
+        await _record_denied_auth(session, "AUTHORIZATION_DENIED", actor_user_id=current_user.id)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="System administrator privileges required",
         )
 
     return current_user
+
+
+async def _record_denied_auth(
+    session: AsyncSession, action: str, actor_user_id: UUID | None = None
+) -> None:
+    try:
+        session.add(
+            AuditEvent(
+                actor_user_id=actor_user_id,
+                actor_type=ActorType.USER if actor_user_id else ActorType.SYSTEM,
+                action=action,
+                target_type="USER",
+                target_id=actor_user_id,
+                channel=BookingSource.WEB,
+                outcome=AuditOutcome.DENIED,
+            )
+        )
+        await session.commit()
+    except Exception:
+        await session.rollback()
 
 
 async def require_venue_admin(
@@ -89,6 +118,7 @@ async def require_venue_admin(
         )
     )
     if result.scalars().first() is None:
+        await _record_denied_auth(session, "AUTHORIZATION_DENIED", actor_user_id=current_user.id)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Venue administrator privileges required",

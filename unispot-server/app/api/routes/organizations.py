@@ -7,6 +7,7 @@ from app.api.dependencies.auth import require_system_admin
 from app.api.dependencies.database import get_db
 from app.models.organization import Organization
 from app.models.organization_membership import OrganizationMembership
+from app.models.user import User
 from app.schemas.organization import (
     MembershipCreate,
     MembershipResponse,
@@ -32,7 +33,7 @@ router = APIRouter(prefix="/organizations", tags=["organizations"])
 async def create(
     data: OrganizationCreate,
     session: AsyncSession = Depends(get_db),  # noqa: B008
-    _: object = Depends(require_system_admin),  # noqa: B008
+    current_user: User = Depends(require_system_admin),  # noqa: B008
 ) -> Organization:
     try:
         return await create_organization(
@@ -40,6 +41,7 @@ async def create(
             data.name,
             data.slug,
             data.organization_type,
+            actor_id=current_user.id,
         )
     except ValueError as error:
         raise HTTPException(
@@ -51,7 +53,7 @@ async def create(
 @router.get("", response_model=list[OrganizationResponse])
 async def list_all(
     session: AsyncSession = Depends(get_db),  # noqa: B008
-    _: object = Depends(require_system_admin),  # noqa: B008
+    current_user: User = Depends(require_system_admin),  # noqa: B008
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0, le=10000),
 ) -> list[Organization]:
@@ -66,7 +68,7 @@ async def update(
     organization_id: UUID,
     data: OrganizationCreate,
     session: AsyncSession = Depends(get_db),  # noqa: B008
-    _: object = Depends(require_system_admin),  # noqa: B008
+    current_user: User = Depends(require_system_admin),  # noqa: B008
 ) -> Organization:
     try:
         return await update_organization(
@@ -75,6 +77,7 @@ async def update(
             data.name,
             data.slug,
             data.organization_type,
+            actor_id=current_user.id,
         )
     except ValueError as error:
         raise HTTPException(
@@ -92,7 +95,7 @@ async def add_member(
     organization_id: UUID,
     data: MembershipCreate,
     session: AsyncSession = Depends(get_db),  # noqa: B008
-    _: object = Depends(require_system_admin),  # noqa: B008
+    current_user: User = Depends(require_system_admin),  # noqa: B008
 ) -> OrganizationMembership:
     try:
         return await assign_membership(
@@ -100,6 +103,7 @@ async def add_member(
             data.user_id,
             organization_id,
             data.membership_role,
+            actor_id=current_user.id,
         )
     except ValueError as error:
         raise HTTPException(
@@ -115,12 +119,13 @@ async def add_member(
 async def deactivate_member(
     membership_id: UUID,
     session: AsyncSession = Depends(get_db),  # noqa: B008
-    _: object = Depends(require_system_admin),  # noqa: B008
+    current_user: User = Depends(require_system_admin),  # noqa: B008
 ) -> OrganizationMembership:
     try:
         return await deactivate_membership(
             session,
             membership_id,
+            actor_id=current_user.id,
         )
     except ValueError as error:
         raise HTTPException(

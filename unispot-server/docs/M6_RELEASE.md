@@ -20,8 +20,9 @@ invalidates the old proposal, including when its replacement has invalid argumen
 One write per turn is allowed. Concurrent turns on an existing conversation return
 409 immediately; same-key booking requests serialize and replay without duplicates.
 
-Policy remains: minimum 24-hour booking lead time, maximum 12-hour duration,
-maximum 180-day advance window, active organization membership, capacity and venue
+Policy requires an active `ORGANIZER` membership (a generic active member cannot
+book) and remains: minimum 24-hour booking lead time, maximum 12-hour duration,
+maximum 180-day advance window, capacity and venue
 operating hours. Cancellation requires at least 24 hours' notice.
 
 ## Local development and verification
@@ -39,8 +40,13 @@ uv run python -m app.worker
 
 The application has no public registration or automatic admin bootstrap. Provision
 users, password hashes, roles and memberships through your existing controlled
-administrative process. `POST /auth/login` returns bearer tokens for an active
-account. A refresh service exists internally but has no HTTP refresh endpoint.
+administrative process. System administrators can manage account status and role
+assignments through the protected `/admin/users/{id}/status` and
+`/admin/users/{id}/roles` endpoints; every change is audited and an administrator
+cannot disable their own account or remove the last active system administrator.
+`POST /auth/login` returns bearer tokens for an active
+account, and `POST /auth/refresh` exchanges a valid refresh token only while its
+user remains active. Suspended/disabled users cannot refresh old tokens.
 
 ```powershell
 uv run ruff check .
@@ -81,12 +87,16 @@ backups with a restore drill, resource limits, log retention, secret management,
 monitoring/alerts and a restricted runtime DB role separate from the migration
 owner. Run migrations once per release under the migration identity, not once per
 replica. Restrict runtime audit permissions to SELECT/INSERT; the application has
-no audit update/delete endpoint, but database-role immutability is an operator task.
+no audit update/delete endpoint, and migration `20261009_0009` also enforces
+append-only behavior with a database trigger. Keep runtime permissions restricted
+as an additional defense.
 Review and pin approved base-image digests in your deployment pipeline.
 
 Migration `20261008_0008` adds only `rate_limit_buckets` and its expiry index;
-existing booking data is unchanged. Back up before migrations. Its one-step
-downgrade drops rate-limit counters; use only with an approved application rollback.
+`20261009_0009` adds a PostgreSQL append-only trigger for `audit_events`.
+Existing booking data is unchanged. Back up before migrations. Downgrading 0008
+drops rate-limit counters; downgrading 0009 removes database enforcement and must
+only be done with an approved application rollback.
 
 ## Configuration
 
@@ -173,17 +183,17 @@ production alerting. Never use these approximate counters as a billing/audit led
 
 | Requirement | Routes / implementation | Schema migrations | Automated evidence |
 | --- | --- | --- | --- |
-| Active identity and administrative visibility, no approvals | `/auth/login`, `/admin/allocations`; auth dependencies | 0002 identity; 0004 booking | `test_http_login_booking_audit_admin_and_cancellation`, OpenAPI/schema tests |
-| Automatic policy-based booking, 24h / 12h boundaries | `POST /bookings`; booking_policy / booking_service | 0003 reservations; 0004 booking | `test_business_rule_boundaries`, HTTP create test |
-| No overlap, adjacent intervals allowed, blocks respected | shared reservation exclusion constraint | 0003 | `test_atomic_conflicts_replay_back_to_back_and_cancellation`, `test_block_prevents_web_and_assistant_writes` |
+| Active identity, user administration and administrative visibility, no approvals | `/auth/login`, `/auth/refresh`, `/admin/users/*`, `/admin/allocations`; auth dependencies | 0002 identity; 0004 booking | HTTP auth/admin regression, OpenAPI/schema tests |
+| Automatic policy-based booking, organizer role, 24h / 12h boundaries | `POST /bookings`; booking_policy / booking_service | 0003 reservations; 0004 booking | `test_booking_requires_organizer_membership`, `test_business_rule_boundaries`, HTTP create test |
+| No overlap, adjacent intervals allowed, blocks respected, alternatives on conflict | shared reservation exclusion constraint and conflict lookup | 0003 | `test_atomic_conflicts_replay_back_to_back_and_cancellation`, `test_block_prevents_web_and_assistant_writes` |
 | Owned retrieval, cancellation, idempotent retries | `/bookings/me`, `/{id}`, `/{id}/cancel`; lifecycle / idempotency | 0004, 0005 | ownership, HTTP cancellation, concurrent same-key tests |
 | Assistant cannot bypass identity/confirmation or execute SQL | `/assistant/messages`; typed executor, saved confirmation | 0007 | assistant schema, invalid-replacement, create/retry/cancel and conversation-concurrency tests |
-| History/audit and notification independence | transactional booking events; worker | 0005–0007 | HTTP history/request-ID test, delivery retry-cap test |
+| History/audit and notification independence | transactional booking events; worker; append-only audit trigger | 0005–0007, 0009 | HTTP history/request-ID test, delivery retry-cap test |
 | Safe errors/tracing and abuse bounds | HTTP middleware, exception handlers, admin metrics | 0008 rate buckets | `test_hardening.py`, atomic limiter test |
 | Non-model booking remains usable during provider outage | separate domain services and API routes | no new schema | `test_provider_failure_keeps_web_booking_usable` (backend service path) |
-| Reproducible schema and deployment | Alembic, Dockerfile, compose, backend CI | 0001–0008 | disposable database upgrade/downgrade/upgrade; CI container smoke job |
+| Reproducible schema and deployment | Alembic, Dockerfile, compose, backend CI | 0001–0009 | disposable database upgrade/downgrade/upgrade; CI container smoke job |
 
-Local verification: **42 tests passed** against PostgreSQL (including release
+Local verification: **43 tests passed** against PostgreSQL (including release
 upgrade/downgrade/upgrade), Ruff passed, mypy passed for 84 source files,
 `git diff --check` passed, and Compose configuration validation passed. The test
 run emits one existing Starlette/httpx deprecation warning; no test is skipped in

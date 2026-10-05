@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     app_name: str = "UniSpot API"
     app_version: str = "0.1.0"
     environment: Environment = Field(validation_alias="APP_ENV")
-    database_url: str = Field(validation_alias="DATABASE_URL")
+    database_url: SecretStr = Field(validation_alias="DATABASE_URL")
     jwt_secret_key: SecretStr = Field(validation_alias="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
     jwt_access_token_minutes: int = Field(
@@ -53,8 +53,8 @@ class Settings(BaseSettings):
 
     @field_validator("database_url")
     @classmethod
-    def require_async_postgresql(cls, value: str) -> str:
-        if not value.startswith("postgresql+asyncpg://"):
+    def require_async_postgresql(cls, value: SecretStr) -> SecretStr:
+        if not value.get_secret_value().startswith("postgresql+asyncpg://"):
             raise ValueError("DATABASE_URL must use the postgresql+asyncpg driver")
         return value
 
@@ -73,7 +73,7 @@ class Settings(BaseSettings):
         if not self.rate_limit_enabled:
             raise ValueError("production requires rate limiting")
 
-        database_url = self.database_url.lower()
+        database_url = self.database_url.get_secret_value().lower()
         secret = self.jwt_secret_key.get_secret_value().lower()
         origins = {str(origin).lower() for origin in self.allowed_origins}
 

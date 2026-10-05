@@ -15,6 +15,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.metrics import router as metrics_router
 from app.api.routes.notifications import router as notifications_router
 from app.api.routes.organizations import router as organizations_router
+from app.api.routes.user_admin import router as user_admin_router
 from app.api.routes.venues import router as venues_router
 from app.core.config import Settings, get_settings
 from app.core.http_errors import ErrorResponse, install_error_handlers
@@ -60,6 +61,7 @@ def create_application(settings: Settings | None = None) -> FastAPI:
     install_error_handlers(application)
     application.include_router(auth_router)
     application.include_router(metrics_router)
+    application.include_router(user_admin_router)
     application.include_router(health_router)
     application.include_router(organizations_router)
     application.include_router(venues_router)

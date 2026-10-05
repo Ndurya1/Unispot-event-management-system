@@ -58,10 +58,10 @@ async def update(
 async def remove(
     facility_id: UUID,
     session: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_venue_admin)],
+    current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> Response:
     try:
-        await delete_facility(session, facility_id)
+        await delete_facility(session, facility_id, actor_id=current_user.id)
     except ValueError as error:
         code = 409 if "linked" in str(error) else 404
         raise HTTPException(status_code=code, detail=str(error)) from error

@@ -74,6 +74,9 @@ def install_error_handlers(app: FastAPI) -> None:
         if isinstance(detail, dict):
             code = detail.get("code", code)
             message = detail.get("message", message)
+            raw_details = detail.get("details", [])
+            if isinstance(raw_details, list):
+                details = [item for item in raw_details if isinstance(item, dict)]
         if exc.status_code >= 500:
             message = "Service is temporarily unavailable"
         return error_response(exc.status_code, code, message, details=details, headers=exc.headers)
