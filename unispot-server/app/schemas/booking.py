@@ -10,7 +10,7 @@ class BookingCreate(BaseModel):
     venue_id: UUID
     organization_id: UUID
     event_name: str = Field(min_length=1, max_length=200)
-    event_description: str | None = None
+    event_description: str | None = Field(default=None, max_length=4000)
     expected_attendance: int = Field(gt=0)
     starts_at: datetime
     ends_at: datetime

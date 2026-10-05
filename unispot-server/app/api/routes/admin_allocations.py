@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import require_venue_admin
 from app.api.dependencies.database import get_db
+from app.core.query_bounds import validate_date_filters
 from app.models.user import User
 from app.schemas.booking import AllocationResponse
 from app.services.booking_lifecycle import list_allocations
@@ -22,8 +23,9 @@ async def allocations(
     starts_to: datetime | None = None,
     venue_id: UUID | None = None,
     limit: int = Query(default=100, ge=1, le=250),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10000),
 ) -> list[AllocationResponse]:
+    validate_date_filters(starts_from, starts_to)
     bookings = await list_allocations(
         session,
         starts_from=starts_from,

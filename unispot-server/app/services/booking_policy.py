@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.organization import Organization, OrganizationStatus
 from app.models.organization_membership import (
+    MembershipRole,
     MembershipStatus,
     OrganizationMembership,
 )
@@ -55,6 +56,7 @@ async def validate_booking_policy(
         .where(
             OrganizationMembership.user_id == requester.id,
             OrganizationMembership.organization_id == organization_id,
+            OrganizationMembership.membership_role == MembershipRole.ORGANIZER,
             OrganizationMembership.status == MembershipStatus.ACTIVE,
             Organization.status == OrganizationStatus.ACTIVE,
         )
@@ -63,7 +65,7 @@ async def validate_booking_policy(
         violations.append(
             PolicyViolation(
                 "organization_membership_required",
-                "The requester must have an active membership in the organization",
+                "The requester must have an active organizer membership in the organization",
             )
         )
 

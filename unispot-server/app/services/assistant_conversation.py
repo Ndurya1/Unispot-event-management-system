@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.observability import metrics
 from app.models.assistant import (
     AssistantToolCall,
     AssistantToolCallStatus,
@@ -113,6 +114,7 @@ async def record_tool_call(
     )
     session.add(tool_call)
     await session.flush()
+    metrics.add(f"assistant_tools_{status.value.lower()}_total")
     outcome = {
         AssistantToolCallStatus.SUCCEEDED: AuditOutcome.SUCCEEDED,
         AssistantToolCallStatus.REQUESTED: AuditOutcome.DENIED,
@@ -135,27 +137,20 @@ async def record_tool_call(
     return tool_call
 
 
-async def purge_expired_conversations(
-    session: AsyncSession, *, now: datetime | None = None
-) -> int:
+async def purge_expired_conversations(session: AsyncSession, *, now: datetime | None = None) -> int:
     """Delete conversations past retention without exposing their contents."""
     cutoff = now or datetime.now(UTC)
-    count = await session.scalar(
-        select(func.count())
-        .select_from(Conversation)
+    result = await session.execute(
+        delete(Conversation)
         .where(
             Conversation.retention_until.is_not(None),
             Conversation.retention_until <= cutoff,
         )
+        .returning(Conversation.id)
     )
-    await session.execute(
-        delete(Conversation).where(
-            Conversation.retention_until.is_not(None),
-            Conversation.retention_until <= cutoff,
-        )
-    )
+    count = len(result.all())
     await session.commit()
-    return int(count or 0)
+    return count
 
 
 def _is_sensitive_key(key: str) -> bool:

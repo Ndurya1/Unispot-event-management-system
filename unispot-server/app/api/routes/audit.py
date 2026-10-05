@@ -20,7 +20,7 @@ async def list_events(
     target_type: str | None = None,
     action: str | None = None,
     limit: int = Query(default=100, ge=1, le=250),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10000),
 ) -> list[AuditEvent]:
     conditions = []
     if target_type is not None:

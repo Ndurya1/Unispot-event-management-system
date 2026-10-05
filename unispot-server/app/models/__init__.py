@@ -24,6 +24,7 @@ from app.models.organization import OrganizationType as OrganizationType
 from app.models.organization_membership import MembershipRole as MembershipRole
 from app.models.organization_membership import MembershipStatus as MembershipStatus
 from app.models.organization_membership import OrganizationMembership as OrganizationMembership
+from app.models.rate_limit import RateLimitBucket as RateLimitBucket
 from app.models.reservation import ReservationType as ReservationType
 from app.models.reservation import VenueReservation as VenueReservation
 from app.models.role import Role as Role
