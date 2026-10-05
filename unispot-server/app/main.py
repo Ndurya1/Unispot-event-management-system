@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.admin_allocations import router as admin_allocations_router
+from app.api.routes.assistant import router as assistant_router
 from app.api.routes.audit import router as audit_router
 from app.api.routes.availability import router as availability_router
 from app.api.routes.bookings import router as bookings_router
@@ -48,6 +49,7 @@ def create_application(settings: Settings | None = None) -> FastAPI:
     application.include_router(admin_allocations_router)
     application.include_router(notifications_router)
     application.include_router(audit_router)
+    application.include_router(assistant_router)
     return application
 
 

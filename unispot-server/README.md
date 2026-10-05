@@ -38,3 +38,18 @@ the database is unavailable.
 
 CI provides `TEST_DATABASE_URL` automatically for the PostgreSQL-backed
 integration check.
+
+## In-app assistant
+
+The authenticated React client sends conversational turns to
+`POST /assistant/messages`. The endpoint persists conversation state and accepts
+only the typed allow-list: `search_venues`, `check_availability`,
+`get_booking_policy`, `list_my_bookings`, `create_booking`, and
+`cancel_my_booking`. Venue discovery and booking writes run through the same
+domain services as the standard UI. Create and cancel calls are staged until
+the client sends `confirmed: true`; booking writes also use an
+`Idempotency-Key` header.
+
+The default local provider is a safe rule-based fallback. A model adapter can be
+configured behind the provider interface without exposing database credentials
+or accepting model-generated SQL, requester IDs, or role escalation.

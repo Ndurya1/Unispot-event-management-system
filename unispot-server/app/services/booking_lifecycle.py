@@ -101,11 +101,13 @@ async def cancel_booking(
     requester: User,
     data: BookingCancelRequest,
     idempotency_key: str,
+    source: BookingSource = BookingSource.WEB,
 ) -> Booking:
     if not idempotency_key or len(idempotency_key) > 160:
         raise ValueError("Idempotency-Key must contain between 1 and 160 characters")
     request_hash = _cancel_request_hash(booking_id, data)
     await session.rollback()
+    await session.refresh(requester)
     try:
         async with session.begin():
             existing = await session.scalar(
@@ -160,7 +162,7 @@ async def cancel_booking(
                     booking_id=booking.id,
                     event_type=BookingEventType.CANCELLED,
                     actor_user_id=requester.id,
-                    source=BookingSource.WEB,
+                    source=source,
                     reason=data.reason,
                 )
             )
@@ -182,7 +184,7 @@ async def cancel_booking(
                     action="BOOKING_CANCELLED",
                     target_type="BOOKING",
                     target_id=booking.id,
-                    channel=BookingSource.WEB,
+                    channel=source,
                     outcome=AuditOutcome.SUCCEEDED,
                     event_metadata={"reason": data.reason} if data.reason else {},
                 )
