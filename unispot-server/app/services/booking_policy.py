@@ -15,9 +15,9 @@ from app.models.user import User, UserStatus
 from app.models.venue import Venue, VenueStatus
 from app.models.venue_operating_hours import VenueOperatingHours
 
-BOOKING_MIN_LEAD_TIME = timedelta(hours=2)
+BOOKING_MIN_LEAD_TIME = timedelta(hours=24)
 BOOKING_MAX_ADVANCE_WINDOW = timedelta(days=180)
-BOOKING_MAX_DURATION = timedelta(hours=8)
+BOOKING_MAX_DURATION = timedelta(hours=12)
 
 
 @dataclass(frozen=True)
@@ -89,7 +89,7 @@ async def validate_booking_policy(
             violations.append(
                 PolicyViolation(
                     "minimum_lead_time",
-                    "Bookings must be made at least two hours before they start",
+                    "Bookings must be made at least 24 hours before they start",
                 )
             )
         if starts_at > current_time + BOOKING_MAX_ADVANCE_WINDOW:
@@ -101,7 +101,7 @@ async def validate_booking_policy(
             )
         if ends_at - starts_at > BOOKING_MAX_DURATION:
             violations.append(
-                PolicyViolation("maximum_duration", "Bookings cannot exceed eight hours")
+                PolicyViolation("maximum_duration", "Bookings cannot exceed twelve hours")
             )
         violations.extend(await _operating_hours_violations(session, venue, starts_at, ends_at))
 
