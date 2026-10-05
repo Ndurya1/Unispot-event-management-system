@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import get_current_user
 from app.api.dependencies.database import get_db
+from app.core.query_bounds import validate_date_filters
 from app.models.booking import Booking, BookingStatus
 from app.models.user import User
 from app.schemas.booking import BookingCancelRequest, BookingCreate, BookingResponse
@@ -34,8 +35,9 @@ async def list_mine(
     starts_from: datetime | None = None,
     starts_to: datetime | None = None,
     limit: int = Query(default=50, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10000),
 ) -> list[Booking]:
+    validate_date_filters(starts_from, starts_to)
     return await list_my_bookings(
         session,
         requester_id=current_user.id,

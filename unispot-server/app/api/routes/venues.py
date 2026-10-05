@@ -55,6 +55,8 @@ async def list_all(
     location: str | None = None,
     facility_id: UUID | None = None,
     status: VenueStatus | None = None,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=10000),
 ) -> list[Venue]:
     return await list_venues(
         session,
@@ -62,6 +64,8 @@ async def list_all(
         location=location,
         facility_id=facility_id,
         status=status,
+        limit=limit,
+        offset=offset,
     )
 
 

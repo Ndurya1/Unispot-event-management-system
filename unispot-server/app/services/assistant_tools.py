@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.booking import Booking, BookingSource
 from app.models.user import User
-from app.models.venue import Venue
+from app.models.venue import Venue, VenueStatus
 from app.schemas.assistant import (
     CancelMyBookingArguments,
     CheckAvailabilityArguments,
@@ -78,6 +78,7 @@ class AssistantToolExecutor:
             capacity=data.capacity,
             location=data.location,
             facility_id=data.facility_id,
+            status=VenueStatus.ACTIVE,
         )
         return {"venues": [_venue_summary(venue) for venue in venues]}
 

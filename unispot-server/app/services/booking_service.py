@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.observability import metrics
 from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
 from app.models.booking import Booking, BookingSource, IdempotencyKey
 from app.models.booking_event import BookingEvent, BookingEventType
@@ -21,6 +22,7 @@ from app.models.user import User
 from app.models.venue import Venue
 from app.schemas.booking import BookingCreate
 from app.services.booking_policy import BookingPolicyError, validate_booking_policy
+from app.services.idempotency import lock_idempotency_key
 
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
 
@@ -45,15 +47,18 @@ async def create_booking(
         raise ValueError("Idempotency-Key must contain between 1 and 160 characters")
 
     request_hash = _request_hash(data)
+    requester_id = requester.id
+    metrics.add("booking_attempts_total")
     # get_current_user has already read from this session.  End that read-only
     # transaction before starting the atomic booking transaction.
     await session.rollback()
     # Rollback expires ORM instances even when expire_on_commit is disabled.
     # Reload the authenticated requester before policy validation and audit.
-    await session.refresh(requester)
 
     try:
         async with session.begin():
+            await session.refresh(requester)
+            await lock_idempotency_key(session, requester.id, "create_booking", idempotency_key)
             existing = await session.scalar(
                 select(IdempotencyKey)
                 .where(
@@ -74,6 +79,7 @@ async def create_booking(
                 booking = await session.get(Booking, booking_id)
                 if booking is None:
                     raise IdempotencyConflictError("The original booking no longer exists")
+                metrics.add("booking_replays_total")
                 return booking
 
             venue = await session.scalar(
@@ -167,12 +173,14 @@ async def create_booking(
                 )
             )
             await session.flush()
-            return booking
+        metrics.add("booking_confirmations_total")
+        return booking
     except BookingPolicyError as error:
+        metrics.add("booking_denials_total")
         await session.rollback()
         await _record_failed_booking_audit(
             session,
-            requester_id=requester.id,
+            requester_id=requester_id,
             venue_id=data.venue_id,
             source=source,
             action="BOOKING_DENIED",
@@ -182,9 +190,10 @@ async def create_booking(
     except IntegrityError as error:
         await session.rollback()
         if "ex_venue_reservation_time" in str(error.orig):
+            metrics.add("booking_conflicts_total")
             await _record_failed_booking_audit(
                 session,
-                requester_id=requester.id,
+                requester_id=requester_id,
                 venue_id=data.venue_id,
                 source=source,
                 action="BOOKING_CONFLICT",

@@ -40,6 +40,16 @@ class Settings(BaseSettings):
         validation_alias="JWT_REFRESH_TOKEN_MINUTES",
     )
     allowed_origins: list[AnyHttpUrl] = Field(validation_alias="ALLOWED_ORIGINS")
+    max_request_body_bytes: int = Field(default=32768, ge=1024, le=1048576)
+    request_body_timeout_seconds: int = Field(default=15, ge=1, le=120)
+    rate_limit_enabled: bool = True
+    rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600)
+    rate_limit_login: int = Field(default=10, ge=1, le=10000)
+    rate_limit_booking: int = Field(default=30, ge=1, le=10000)
+    rate_limit_availability: int = Field(default=60, ge=1, le=10000)
+    rate_limit_assistant: int = Field(default=20, ge=1, le=10000)
+    assistant_timeout_seconds: int = Field(default=20, ge=1, le=120)
+    worker_interval_seconds: int = Field(default=30, ge=1, le=3600)
 
     @field_validator("database_url")
     @classmethod
@@ -59,6 +69,9 @@ class Settings(BaseSettings):
     def validate_production_safety(self) -> Self:
         if self.environment is not Environment.PRODUCTION:
             return self
+
+        if not self.rate_limit_enabled:
+            raise ValueError("production requires rate limiting")
 
         database_url = self.database_url.lower()
         secret = self.jwt_secret_key.get_secret_value().lower()

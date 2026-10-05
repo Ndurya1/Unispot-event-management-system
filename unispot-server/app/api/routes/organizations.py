@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import require_system_admin
@@ -52,8 +52,10 @@ async def create(
 async def list_all(
     session: AsyncSession = Depends(get_db),  # noqa: B008
     _: object = Depends(require_system_admin),  # noqa: B008
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=10000),
 ) -> list[Organization]:
-    return await list_organizations(session)
+    return await list_organizations(session, limit=limit, offset=offset)
 
 
 @router.patch(

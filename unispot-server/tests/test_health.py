@@ -33,12 +33,8 @@ def test_readiness_hides_database_failure(client: TestClient) -> None:
     response = client.get("/health/readiness")
 
     assert response.status_code == 503
-    assert response.json() == {
-        "detail": {
-            "code": "database_unavailable",
-            "message": "Database is temporarily unavailable",
-        }
-    }
+    assert response.json()["error"]["code"] == "database_unavailable"
+    assert response.json()["error"]["request_id"] == response.headers["X-Request-ID"]
     assert "database offline" not in response.text
 
 

@@ -40,9 +40,12 @@ async def create_organization(
 
 async def list_organizations(
     session: AsyncSession,
+    *,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[Organization]:
     result = await session.execute(
-        select(Organization).order_by(Organization.name)
+        select(Organization).order_by(Organization.name).limit(limit).offset(offset)
     )
     return list(result.scalars().all())
 
@@ -55,9 +58,7 @@ async def update_organization(
     organization_type: OrganizationType | None = None,
     status: OrganizationStatus | None = None,
 ) -> Organization:
-    result = await session.execute(
-        select(Organization).where(Organization.id == organization_id)
-    )
+    result = await session.execute(select(Organization).where(Organization.id == organization_id))
     organization = result.scalar_one_or_none()
 
     if organization is None:

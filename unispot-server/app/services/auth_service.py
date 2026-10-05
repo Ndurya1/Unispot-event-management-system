@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 import jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
 
 from app.core.security import (
     create_access_token,
@@ -17,9 +18,7 @@ async def login_user(
     email: str,
     password: str,
 ) -> dict[str, str]:
-    result = await session.execute(
-        select(User).where(User.email == email)
-    )
+    result = await session.execute(select(User).where(User.email == email))
 
     user = result.scalar_one_or_none()
 
@@ -28,13 +27,13 @@ async def login_user(
         raise ValueError("Invalid email or password")
 
     # Disabled users cannot authenticate
-    if user.status == UserStatus.DISABLED:
+    if user.status != UserStatus.ACTIVE:
         raise ValueError("Invalid email or password")
 
     if user.password_hash is None:
         raise ValueError("Invalid email or password")
 
-    if not verify_password(user.password_hash, password):
+    if not await run_in_threadpool(verify_password, user.password_hash, password):
         raise ValueError("Invalid email or password")
 
     # Record successful login

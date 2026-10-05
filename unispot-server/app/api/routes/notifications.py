@@ -19,11 +19,9 @@ async def list_mine(
     session: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     limit: int = Query(default=50, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=10000),
 ) -> list[Notification]:
-    return await list_my_notifications(
-        session, user_id=current_user.id, limit=limit, offset=offset
-    )
+    return await list_my_notifications(session, user_id=current_user.id, limit=limit, offset=offset)
 
 
 @router.post("/{notification_id}/read", response_model=NotificationResponse)

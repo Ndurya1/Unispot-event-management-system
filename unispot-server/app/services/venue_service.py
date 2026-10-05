@@ -55,6 +55,8 @@ async def list_venues(
     location: str | None = None,
     facility_id: UUID | None = None,
     status: VenueStatus | None = None,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[Venue]:
     conditions = [] if status is not None else [Venue.status != VenueStatus.INACTIVE]
     if capacity is not None:
@@ -63,7 +65,9 @@ async def list_venues(
         conditions.append(Venue.location.ilike(f"%{location}%"))
     if status is not None:
         conditions.append(Venue.status == status)
-    statement = select(Venue).where(and_(*conditions)).order_by(Venue.name)
+    statement = (
+        select(Venue).where(and_(*conditions)).order_by(Venue.name).limit(limit).offset(offset)
+    )
     if facility_id is not None:
         statement = statement.join(VenueFacility).where(VenueFacility.facility_id == facility_id)
     result = await session.execute(statement)
@@ -127,8 +131,15 @@ async def create_facility(
     return facility
 
 
-async def list_facilities(session: AsyncSession) -> list[Facility]:
-    result = await session.execute(select(Facility).order_by(Facility.name))
+async def list_facilities(
+    session: AsyncSession,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[Facility]:
+    result = await session.execute(
+        select(Facility).order_by(Facility.name).limit(limit).offset(offset)
+    )
     return list(result.scalars().all())
 
 
@@ -210,9 +221,7 @@ async def add_operating_hours(
     return hours
 
 
-async def list_operating_hours(
-    session: AsyncSession, venue_id: UUID
-) -> list[VenueOperatingHours]:
+async def list_operating_hours(session: AsyncSession, venue_id: UUID) -> list[VenueOperatingHours]:
     if await session.get(Venue, venue_id) is None:
         raise ValueError("Venue not found")
     result = await session.execute(
@@ -320,9 +329,7 @@ async def find_available_venues(
         select(VenueReservation.id).where(
             VenueReservation.venue_id == Venue.id,
             VenueReservation.active.is_(True),
-            VenueReservation.occupied_range.op("&&")(
-                func.tstzrange(starts_at, ends_at, "[)")
-            ),
+            VenueReservation.occupied_range.op("&&")(func.tstzrange(starts_at, ends_at, "[)")),
         )
     )
     conditions = [Venue.status == VenueStatus.ACTIVE, ~overlap]

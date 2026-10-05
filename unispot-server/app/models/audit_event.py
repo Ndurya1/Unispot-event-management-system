@@ -8,6 +8,7 @@ from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.observability import request_id_context
 from app.db.base import Base
 from app.models.booking import BookingSource
 
@@ -44,7 +45,10 @@ class AuditEvent(Base):
     target_type: Mapped[str] = mapped_column(String(80), nullable=False)
     target_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     request_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), nullable=False, server_default=text("gen_random_uuid()")
+        UUID(as_uuid=True),
+        nullable=False,
+        server_default=text("gen_random_uuid()"),
+        default=lambda: request_id_context.get() or uuid.uuid4(),
     )
     channel: Mapped[BookingSource] = mapped_column(
         SQLEnum(BookingSource, name="booking_source"), nullable=False

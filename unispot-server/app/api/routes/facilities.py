@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import require_venue_admin
@@ -32,8 +32,12 @@ async def create(
 
 
 @router.get("", response_model=list[FacilityResponse])
-async def list_all(session: Annotated[AsyncSession, Depends(get_db)]) -> list[Facility]:
-    return await list_facilities(session)
+async def list_all(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=10000),
+) -> list[Facility]:
+    return await list_facilities(session, limit=limit, offset=offset)
 
 
 @router.patch("/{facility_id}", response_model=FacilityResponse)
@@ -44,9 +48,7 @@ async def update(
     current_user: Annotated[User, Depends(require_venue_admin)],
 ) -> Facility:
     try:
-        return await update_facility(
-            session, facility_id, data.name, actor_id=current_user.id
-        )
+        return await update_facility(session, facility_id, data.name, actor_id=current_user.id)
     except ValueError as error:
         code = 409 if "already" in str(error) else 404
         raise HTTPException(status_code=code, detail=str(error)) from error

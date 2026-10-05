@@ -41,6 +41,7 @@ async def process_pending_notifications(
         select(Notification)
         .where(
             Notification.delivery_status.in_([DeliveryStatus.PENDING, DeliveryStatus.FAILED]),
+            Notification.attempt_count < MAX_DELIVERY_ATTEMPTS,
             or_(
                 Notification.next_attempt_at.is_(None),
                 Notification.next_attempt_at <= current_time,
