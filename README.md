@@ -1,43 +1,33 @@
-# UniSpot
+# UniSpot Campus Platform — Frontend
 
-UniSpot is a single React platform for discovering campus venues, managing
-events, and providing dashboards for the platform's users. Its backend is a
-separate FastAPI service in `unispot-server`.
+A responsive, frontend-only campus events and venue-booking prototype built with React, TypeScript, Vite, and React Router. It uses local mock data; authentication, event registration, provider requests, analytics export, QR scanning, equipment checks, waitlists, certificates, and venue bookings are demonstrations and do not submit real data or create records.
 
-## Repository structure
+## Run locally
 
-```text
-.
-├── src/                 # React application
-├── public/              # Frontend static assets
-├── package.json         # Frontend scripts and dependencies
-├── unispot-server/      # FastAPI backend and backend tests
-├── Docs/                # Product and implementation documentation
-└── .github/             # Repository workflows
+Requirements: Node.js 22+ and pnpm 11.25.0 (or Corepack to activate the package manager pinned in `package.json`). From this project folder:
+
+```bash
+corepack enable
+corepack pnpm install
+corepack pnpm dev
 ```
 
-The frontend intentionally lives at the repository root because UniSpot is a
-single frontend application. It can grow into multiple pages and dashboards
-without needing a separate `frontend/` directory. The backend keeps its own
-Python environment and should be run from `unispot-server`.
+Vite prints the local development URL. To check types and create a production build:
 
-## Frontend setup
-
-Prerequisites: Node.js and npm.
-
-```powershell
-npm install
-npm run dev
+```bash
+corepack pnpm typecheck
+corepack pnpm build
 ```
 
-Other frontend checks:
+The production output is written to `dist/`.
 
-```powershell
-npm run lint
-npm run build
-```
+## Campus Services
 
-## Backend setup
+The shared navigation includes **Services**. The `/services` overview links to seven detail screens under `/services/:serviceId`: Event Registration & RSVP, QR Tickets & Attendance, Service Provider Directory, Analytics & Reports, Equipment Reservations, Waitlists & Recurring Bookings, and Digital Certificates. Each screen follows the supplied design reference and uses local-only demo interactions. No real registration, ticket, provider request, scan, analytics export, equipment reservation, waitlist update, certificate, or booking is created.
 
-See [`unispot-server/README.md`](unispot-server/README.md) for Python,
-PostgreSQL, migration, and API instructions.
+## Project notes
+
+- All app data is mock data in `src/data/mock.ts` and the service-page modules; there is no backend or database.
+- This portable export includes the illustrative images it uses under `public/assets/`; source paths resolve locally so the package works outside the hosted preview.
+- The downloaded images are illustrative search-result assets, not verified UniSpot or user-campus photos. Review `ASSET_SOURCES.md` and replace them with appropriately licensed or campus-authorized images before public use.
+- `public/manus-routes.json` declares the frontend page routes for the Manus preview environment.
