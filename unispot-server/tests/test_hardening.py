@@ -115,6 +115,8 @@ def test_body_limit_ignores_spoofed_content_length(hardened_client: TestClient) 
 def test_openapi_error_contract_and_no_approval_controls(client: TestClient) -> None:
     document = client.get("/openapi.json").json()
     assert "/auth/login" in document["paths"]
+    assert "/auth/register" in document["paths"]
+    assert "/auth/token" in document["paths"]
     assert "/admin/metrics" in document["paths"]
     assert document["paths"]["/bookings"]["post"]["responses"]["429"]["content"]
     assert not any("approve" in path or "reject" in path for path in document["paths"])
