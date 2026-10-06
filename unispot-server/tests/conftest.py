@@ -33,7 +33,11 @@ async def db_session() -> AsyncIterator[AsyncSession]:
     test_engine = create_async_engine(database_url, pool_pre_ping=True)
     async with test_engine.connect() as connection:
         transaction = await connection.begin()
-        session = AsyncSession(bind=connection, expire_on_commit=False)
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
         try:
             yield session
         finally:

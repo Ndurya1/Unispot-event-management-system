@@ -1,0 +1,172 @@
+# This file is intentionally disabled. Rename it to assistant_gemini_provider.py
+# and uncomment the code only after adding the Gemini dependency and settings.
+# Never commit a real GEMINI_API_KEY.
+#
+# The adapter returns validated tool requests to assistant_service.py. It does
+# not access the database and it never performs booking writes directly.
+#
+# Future dependency:
+#   google-genai
+#
+# from __future__ import annotations
+#
+# from typing import Any
+#
+# from google import genai
+# from google.genai import types
+#
+# from app.core.config import get_settings
+# from app.schemas.assistant import (
+#     AssistantProviderPlan,
+#     AssistantToolInvocation,
+#     ToolName,
+# )
+#
+#
+# SYSTEM_INSTRUCTION = """
+# You are UniSpot's venue-booking assistant.
+#
+# Help the authenticated organizer search venues, check availability, view their
+# own bookings, and prepare booking or cancellation actions. Use a declared tool
+# when structured data is needed. Never invent venue availability, booking IDs,
+# confirmation codes, policy decisions, or user identity. Never request or expose
+# passwords, tokens, database credentials, requester_id, or another user's data.
+# Booking and cancellation tools only prepare an action; the API requires an
+# explicit user confirmation before executing a write.
+# Return concise, user-facing text when no tool is needed.
+# """.strip()
+#
+#
+# TOOL_DECLARATIONS: list[dict[str, Any]] = [
+#     {
+#         "name": ToolName.SEARCH_VENUES.value,
+#         "description": "Find active venues matching capacity, location, or facility.",
+#         "parameters": {
+#             "type": "OBJECT",
+#             "properties": {
+#                 "capacity": {"type": "INTEGER", "minimum": 1},
+#                 "location": {"type": "STRING"},
+#                 "facility_id": {"type": "STRING"},
+#             },
+#         },
+#     },
+#     {
+#         "name": ToolName.CHECK_AVAILABILITY.value,
+#         "description": "Find venues free for a timezone-aware interval.",
+#         "parameters": {
+#             "type": "OBJECT",
+#             "properties": {
+#                 "starts_at": {"type": "STRING"},
+#                 "ends_at": {"type": "STRING"},
+#                 "capacity": {"type": "INTEGER", "minimum": 1},
+#                 "location": {"type": "STRING"},
+#                 "facility_id": {"type": "STRING"},
+#             },
+#             "required": ["starts_at", "ends_at"],
+#         },
+#     },
+#     {
+#         "name": ToolName.GET_BOOKING_POLICY.value,
+#         "description": "Return the current booking policy and validation rules.",
+#         "parameters": {"type": "OBJECT", "properties": {}},
+#     },
+#     {
+#         "name": ToolName.CREATE_BOOKING.value,
+#         "description": "Prepare a booking request for explicit user confirmation.",
+#         "parameters": {
+#             "type": "OBJECT",
+#             "properties": {
+#                 "venue_id": {"type": "STRING"},
+#                 "organization_id": {"type": "STRING"},
+#                 "event_name": {"type": "STRING"},
+#                 "event_description": {"type": "STRING"},
+#                 "expected_attendance": {"type": "INTEGER", "minimum": 1},
+#                 "starts_at": {"type": "STRING"},
+#                 "ends_at": {"type": "STRING"},
+#             },
+#             "required": [
+#                 "venue_id",
+#                 "organization_id",
+#                 "event_name",
+#                 "expected_attendance",
+#                 "starts_at",
+#                 "ends_at",
+#             ],
+#         },
+#     },
+#     {
+#         "name": ToolName.LIST_MY_BOOKINGS.value,
+#         "description": "List bookings owned by the authenticated organizer.",
+#         "parameters": {
+#             "type": "OBJECT",
+#             "properties": {
+#                 "status": {"type": "STRING"},
+#                 "starts_from": {"type": "STRING"},
+#                 "starts_to": {"type": "STRING"},
+#                 "limit": {"type": "INTEGER", "minimum": 1, "maximum": 100},
+#                 "offset": {"type": "INTEGER", "minimum": 0},
+#             },
+#         },
+#     },
+#     {
+#         "name": ToolName.CANCEL_MY_BOOKING.value,
+#         "description": "Prepare cancellation of the organizer's own booking.",
+#         "parameters": {
+#             "type": "OBJECT",
+#             "properties": {
+#                 "booking_id": {"type": "STRING"},
+#                 "reason": {"type": "STRING"},
+#             },
+#             "required": ["booking_id"],
+#         },
+#     },
+# ]
+#
+#
+# class GeminiFlashAssistantProvider:
+#     """Gemini 2.5 Flash adapter for the existing AssistantProvider protocol."""
+#
+#     def __init__(self) -> None:
+#         settings = get_settings()
+#         # These settings are intentionally not active yet; add them to
+#         # app.core.config.Settings before uncommenting this adapter.
+#         self._client = genai.Client(api_key=settings.gemini_api_key.get_secret_value())
+#         self._model = settings.gemini_model
+#
+#     async def complete(
+#         self, *, message: str, state: dict[str, object]
+#     ) -> AssistantProviderPlan:
+#         context = {
+#             "message": message,
+#             "known_state": state,
+#         }
+#         response = await self._client.aio.models.generate_content(
+#             model=self._model,
+#             contents=str(context),
+#             config=types.GenerateContentConfig(
+#                 system_instruction=SYSTEM_INSTRUCTION,
+#                 tools=[{"function_declarations": TOOL_DECLARATIONS}],
+#                 temperature=0.2,
+#             ),
+#         )
+#
+#         calls: list[AssistantToolInvocation] = []
+#         for candidate in response.candidates or []:
+#             content = candidate.content
+#             for part in content.parts if content else []:
+#                 function_call = getattr(part, "function_call", None)
+#                 if function_call is None or not function_call.name:
+#                     continue
+#                 # Pydantic validates the name and argument shape again in the
+#                 # existing service before any domain tool is executed.
+#                 calls.append(
+#                     AssistantToolInvocation(
+#                         name=function_call.name,
+#                         arguments=dict(function_call.args or {}),
+#                     )
+#                 )
+#
+#         return AssistantProviderPlan(
+#             response=response.text or None,
+#             tool_calls=calls[:8],
+#         )

@@ -4,6 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
+from app.models.booking import BookingSource
 from app.models.organization import Organization, OrganizationStatus, OrganizationType
 from app.models.organization_membership import (
     MembershipRole,
@@ -18,6 +20,8 @@ async def create_organization(
     name: str,
     slug: str,
     organization_type: OrganizationType,
+    *,
+    actor_id: UUID | None = None,
 ) -> Organization:
     organization = Organization(
         name=name,
@@ -27,6 +31,17 @@ async def create_organization(
     )
 
     session.add(organization)
+    session.add(
+        AuditEvent(
+            actor_user_id=actor_id,
+            actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+            action="ORGANIZATION_CREATED",
+            target_type="ORGANIZATION",
+            target_id=organization.id,
+            channel=BookingSource.WEB,
+            outcome=AuditOutcome.SUCCEEDED,
+        )
+    )
 
     try:
         await session.commit()
@@ -40,9 +55,12 @@ async def create_organization(
 
 async def list_organizations(
     session: AsyncSession,
+    *,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[Organization]:
     result = await session.execute(
-        select(Organization).order_by(Organization.name)
+        select(Organization).order_by(Organization.name).limit(limit).offset(offset)
     )
     return list(result.scalars().all())
 
@@ -54,10 +72,10 @@ async def update_organization(
     slug: str | None = None,
     organization_type: OrganizationType | None = None,
     status: OrganizationStatus | None = None,
+    *,
+    actor_id: UUID | None = None,
 ) -> Organization:
-    result = await session.execute(
-        select(Organization).where(Organization.id == organization_id)
-    )
+    result = await session.execute(select(Organization).where(Organization.id == organization_id))
     organization = result.scalar_one_or_none()
 
     if organization is None:
@@ -71,6 +89,17 @@ async def update_organization(
         organization.organization_type = organization_type
     if status is not None:
         organization.status = status
+    session.add(
+        AuditEvent(
+            actor_user_id=actor_id,
+            actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+            action="ORGANIZATION_UPDATED",
+            target_type="ORGANIZATION",
+            target_id=organization.id,
+            channel=BookingSource.WEB,
+            outcome=AuditOutcome.SUCCEEDED,
+        )
+    )
 
     try:
         await session.commit()
@@ -87,6 +116,8 @@ async def assign_membership(
     user_id: UUID,
     organization_id: UUID,
     membership_role: MembershipRole,
+    *,
+    actor_id: UUID | None = None,
 ) -> OrganizationMembership:
     user = await session.get(User, user_id)
     organization = await session.get(Organization, organization_id)
@@ -115,6 +146,18 @@ async def assign_membership(
     )
 
     session.add(membership)
+    session.add(
+        AuditEvent(
+            actor_user_id=actor_id,
+            actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+            action="MEMBERSHIP_ASSIGNED",
+            target_type="MEMBERSHIP",
+            target_id=membership.id,
+            channel=BookingSource.WEB,
+            outcome=AuditOutcome.SUCCEEDED,
+            event_metadata={"user_id": str(user_id), "organization_id": str(organization_id)},
+        )
+    )
 
     try:
         await session.commit()
@@ -129,6 +172,8 @@ async def assign_membership(
 async def deactivate_membership(
     session: AsyncSession,
     membership_id: UUID,
+    *,
+    actor_id: UUID | None = None,
 ) -> OrganizationMembership:
     membership = await session.get(
         OrganizationMembership,
@@ -139,6 +184,17 @@ async def deactivate_membership(
         raise ValueError("Membership not found")
 
     membership.status = MembershipStatus.INACTIVE
+    session.add(
+        AuditEvent(
+            actor_user_id=actor_id,
+            actor_type=ActorType.USER if actor_id else ActorType.SYSTEM,
+            action="MEMBERSHIP_DEACTIVATED",
+            target_type="MEMBERSHIP",
+            target_id=membership.id,
+            channel=BookingSource.WEB,
+            outcome=AuditOutcome.SUCCEEDED,
+        )
+    )
 
     await session.commit()
     await session.refresh(membership)

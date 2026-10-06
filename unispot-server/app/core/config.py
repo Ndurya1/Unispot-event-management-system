@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     app_name: str = "UniSpot API"
     app_version: str = "0.1.0"
     environment: Environment = Field(validation_alias="APP_ENV")
-    database_url: str = Field(validation_alias="DATABASE_URL")
+    database_url: SecretStr = Field(validation_alias="DATABASE_URL")
     jwt_secret_key: SecretStr = Field(validation_alias="JWT_SECRET_KEY")
     jwt_algorithm: str = Field(default="HS256", validation_alias="JWT_ALGORITHM")
     jwt_access_token_minutes: int = Field(
@@ -40,11 +40,21 @@ class Settings(BaseSettings):
         validation_alias="JWT_REFRESH_TOKEN_MINUTES",
     )
     allowed_origins: list[AnyHttpUrl] = Field(validation_alias="ALLOWED_ORIGINS")
+    max_request_body_bytes: int = Field(default=32768, ge=1024, le=1048576)
+    request_body_timeout_seconds: int = Field(default=15, ge=1, le=120)
+    rate_limit_enabled: bool = True
+    rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600)
+    rate_limit_login: int = Field(default=10, ge=1, le=10000)
+    rate_limit_booking: int = Field(default=30, ge=1, le=10000)
+    rate_limit_availability: int = Field(default=60, ge=1, le=10000)
+    rate_limit_assistant: int = Field(default=20, ge=1, le=10000)
+    assistant_timeout_seconds: int = Field(default=20, ge=1, le=120)
+    worker_interval_seconds: int = Field(default=30, ge=1, le=3600)
 
     @field_validator("database_url")
     @classmethod
-    def require_async_postgresql(cls, value: str) -> str:
-        if not value.startswith("postgresql+asyncpg://"):
+    def require_async_postgresql(cls, value: SecretStr) -> SecretStr:
+        if not value.get_secret_value().startswith("postgresql+asyncpg://"):
             raise ValueError("DATABASE_URL must use the postgresql+asyncpg driver")
         return value
 
@@ -60,7 +70,10 @@ class Settings(BaseSettings):
         if self.environment is not Environment.PRODUCTION:
             return self
 
-        database_url = self.database_url.lower()
+        if not self.rate_limit_enabled:
+            raise ValueError("production requires rate limiting")
+
+        database_url = self.database_url.get_secret_value().lower()
         secret = self.jwt_secret_key.get_secret_value().lower()
         origins = {str(origin).lower() for origin in self.allowed_origins}
 
