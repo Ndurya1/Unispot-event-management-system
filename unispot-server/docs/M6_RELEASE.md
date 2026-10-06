@@ -38,15 +38,14 @@ uv run uvicorn app.main:app --reload --no-access-log
 uv run python -m app.worker
 ```
 
-The application has no public registration or automatic admin bootstrap. Provision
-users, password hashes, roles and memberships through your existing controlled
-administrative process. System administrators can manage account status and role
-assignments through the protected `/admin/users/{id}/status` and
+`POST /auth/register` creates an active account but does not grant roles or
+organization memberships. System administrators can manage account status and
+role assignments through the protected `/admin/users/{id}/status` and
 `/admin/users/{id}/roles` endpoints; every change is audited and an administrator
 cannot disable their own account or remove the last active system administrator.
-`POST /auth/login` returns bearer tokens for an active
-account, and `POST /auth/refresh` exchanges a valid refresh token only while its
-user remains active. Suspended/disabled users cannot refresh old tokens.
+`POST /auth/login` and its `/auth/token` alias return bearer tokens for an active
+account, while `POST /auth/refresh` exchanges a valid refresh token only while
+its user remains active. Suspended/disabled users cannot refresh old tokens.
 
 ```powershell
 uv run ruff check .
@@ -183,7 +182,7 @@ production alerting. Never use these approximate counters as a billing/audit led
 
 | Requirement | Routes / implementation | Schema migrations | Automated evidence |
 | --- | --- | --- | --- |
-| Active identity, user administration and administrative visibility, no approvals | `/auth/login`, `/auth/refresh`, `/admin/users/*`, `/admin/allocations`; auth dependencies | 0002 identity; 0004 booking | HTTP auth/admin regression, OpenAPI/schema tests |
+| Active identity, registration, user administration and administrative visibility, no approvals | `/auth/register`, `/auth/login`, `/auth/token`, `/auth/refresh`, `/admin/users/*`, `/admin/allocations`; auth dependencies | 0002 identity; 0004 booking | HTTP auth/admin regression, OpenAPI/schema tests |
 | Automatic policy-based booking, organizer role, 24h / 12h boundaries | `POST /bookings`; booking_policy / booking_service | 0003 reservations; 0004 booking | `test_booking_requires_organizer_membership`, `test_business_rule_boundaries`, HTTP create test |
 | No overlap, adjacent intervals allowed, blocks respected, alternatives on conflict | shared reservation exclusion constraint and conflict lookup | 0003 | `test_atomic_conflicts_replay_back_to_back_and_cancellation`, `test_block_prevents_web_and_assistant_writes` |
 | Owned retrieval, cancellation, idempotent retries | `/bookings/me`, `/{id}`, `/{id}/cancel`; lifecycle / idempotency | 0004, 0005 | ownership, HTTP cancellation, concurrent same-key tests |

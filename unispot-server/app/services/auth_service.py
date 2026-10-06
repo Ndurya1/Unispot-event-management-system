@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import jwt
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
@@ -9,11 +10,64 @@ from app.core.observability import request_id_context
 from app.core.security import (
     create_access_token,
     create_refresh_token,
+    hash_password,
     verify_password,
 )
 from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
 from app.models.booking import BookingSource
 from app.models.user import User, UserStatus
+
+
+async def register_user(
+    session: AsyncSession,
+    full_name: str,
+    email: str,
+    password: str,
+) -> dict[str, str]:
+    """Create an active account and return the same token pair as login.
+
+    Registration does not grant roles or organization memberships. Those remain
+    controlled administrative operations, so a new account cannot book until it
+    is associated with an organization as an organizer.
+    """
+    normalized_name = " ".join(full_name.split())
+    normalized_email = email.strip().lower()
+    if not normalized_name:
+        raise ValueError("Full name is required")
+
+    existing = await session.scalar(select(User.id).where(User.email == normalized_email))
+    if existing is not None:
+        raise ValueError("Email is already registered")
+
+    password_hash = await run_in_threadpool(hash_password, password)
+    user = User(
+        full_name=normalized_name,
+        email=normalized_email,
+        password_hash=password_hash,
+        status=UserStatus.ACTIVE,
+    )
+    session.add(user)
+    try:
+        await session.flush()
+    except IntegrityError as error:
+        await session.rollback()
+        raise ValueError("Email is already registered") from error
+
+    session.add(
+        AuditEvent(
+            actor_user_id=user.id,
+            actor_type=ActorType.USER,
+            action="REGISTER_SUCCEEDED",
+            target_type="USER",
+            target_id=user.id,
+            channel=BookingSource.WEB,
+            outcome=AuditOutcome.SUCCEEDED,
+        )
+    )
+    access_token = create_access_token({"user_id": str(user.id)})
+    refresh_token = create_refresh_token({"user_id": str(user.id)})
+    await session.commit()
+    return {"access_token": access_token, "refresh_token": refresh_token}
 
 
 async def login_user(

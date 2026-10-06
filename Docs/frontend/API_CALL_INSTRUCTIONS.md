@@ -82,12 +82,39 @@ assistant messages.
 
 ## Authentication
 
-The backend currently exposes login and refresh. Account registration is not an
-available public API; do not wire the signup form to a fictional endpoint.
+The backend exposes registration, login, an OAuth-style token alias, and refresh.
+Registration creates an active account but does not grant organization
+memberships or roles.
+
+### Registration
+
+`POST /auth/register` expects a full name, email, and password (at least 8
+characters). It returns the same access/refresh token pair as login:
+
+```js
+const { data } = await apiFetch("/auth/register", {
+  method: "POST",
+  body: {
+    full_name,
+    email,
+    password,
+  },
+});
+
+saveTokens({
+  accessToken: data.access_token,
+  refreshToken: data.refresh_token,
+});
+```
+
+Registration does not create an organization or organizer membership. A user
+must be assigned to an organization before booking.
 
 ### Login
 
-`POST /auth/login` expects an email and password and returns both tokens.
+`POST /auth/login` expects an email and password and returns both tokens. Clients
+that use a conventional bearer-token path may call `POST /auth/token` with the
+same JSON body; it is an alias, not a separate token format.
 
 ```js
 const { data } = await apiFetch("/auth/login", {
