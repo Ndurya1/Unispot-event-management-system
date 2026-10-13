@@ -8,9 +8,7 @@ function ServicePreview({ kind }: { kind: PreviewKind }) {
   if (kind === 'registration') return <div className="preview-registration"><strong>Register for Event</strong><span>Full name</span><span>Email address</span><em>Register</em></div>;
   if (kind === 'qr') return <div className="preview-qr"><QrCode size={66} strokeWidth={1.6} /><span><Check size={12} /> Scan successful</span></div>;
   if (kind === 'providers') return <ul className="preview-provider-list">{['Catering', 'Photography', 'Sound systems', 'Decorations'].map((item) => <li key={item}><span>{item}</span><ChevronRight size={12} /></li>)}</ul>;
-  if (kind === 'analytics') return <div className="preview-analytics"><small>Total registrations</small><strong>342</strong><span className="preview-growth">↗ 12%</span><div className="preview-bars" aria-hidden="true">{[35, 52, 41, 68, 58, 84, 70].map((height, i) => <i key={i} style={{ height: `${height}%` }} />)}</div><small>Attendance rate <b>87%</b></small></div>;
   if (kind === 'equipment') return <ul className="preview-equipment-list">{['Projectors', 'Sound systems', 'Laptops', 'Chairs & tables'].map((item) => <li key={item}><Monitor size={13} /><span>{item}</span></li>)}</ul>;
-  if (kind === 'waitlist') return <div className="preview-waitlist"><div className="preview-repeat-head"><span>Recurring booking</span><i aria-hidden="true" /></div><div className="preview-days">{['M', 'T', 'W', 'T', 'F'].map((day, i) => <span className={i < 3 ? 'is-selected' : ''} key={`${day}-${i}`}>{day}</span>)}</div><div className="preview-waitlist-note"><Sparkles size={13} /><span><b>Waitlist</b><small>We’ll let you know when a slot opens.</small></span></div></div>;
   return <div className="preview-certificate"><span>UNISPOT · CAMPUS EVENTS</span><strong>Certificate of<br />Participation</strong><i /><small>This is to recognize</small><b>Student Participant</b><BadgeCheck size={32} /></div>;
 }
 

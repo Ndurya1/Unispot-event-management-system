@@ -29,6 +29,7 @@ function DashboardSidebar({ organizer = false }: { organizer?: boolean }) {
     { to: '/student/dashboard#bookings', label: 'My Bookings', icon: CalendarCheck },
     { to: '/student/dashboard#my-events', label: 'My Events', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell },
+    { to: '/my-waitlists', label: 'My Waitlists', icon: ClipboardList },
     { to: '/student/dashboard#profile', label: 'Profile', icon: UserRound },
     { to: '/student/dashboard#settings', label: 'Settings', icon: Settings },
   ];

@@ -1,6 +1,6 @@
-import { BadgeCheck, BarChart3, CalendarDays, Monitor, QrCode, Repeat2, UsersRound } from 'lucide-react';
+import { BadgeCheck, CalendarDays, Monitor, QrCode, UsersRound } from 'lucide-react';
 
-export type PreviewKind = 'registration' | 'qr' | 'providers' | 'analytics' | 'equipment' | 'waitlist' | 'certificate';
+export type PreviewKind = 'registration' | 'qr' | 'providers' | 'equipment' | 'certificate';
 export type ServiceItem = {
   id: string;
   title: string;
@@ -40,15 +40,6 @@ export const serviceItems: ServiceItem[] = [
     icon: UsersRound,
   },
   {
-    id: 'analytics-reports',
-    title: 'Analytics & Reports',
-    description: 'Track registrations, attendance, bookings, and event activity.',
-    benefits: ['Event performance insights', 'Attendance statistics', 'Exportable reports'],
-    tone: 'rose',
-    preview: 'analytics',
-    icon: BarChart3,
-  },
-  {
     id: 'equipment-reservations',
     title: 'Equipment Reservations',
     description: 'Reserve projectors, sound systems, and other essentials for your events.',
@@ -56,15 +47,6 @@ export const serviceItems: ServiceItem[] = [
     tone: 'amber',
     preview: 'equipment',
     icon: Monitor,
-  },
-  {
-    id: 'waitlists-recurring-bookings',
-    title: 'Waitlists & Recurring Bookings',
-    description: 'Join waitlists for popular venues and set up recurring bookings.',
-    benefits: ['Get notified when slots open', 'Manage recurring schedules', 'Flexible cancellation'],
-    tone: 'purple',
-    preview: 'waitlist',
-    icon: Repeat2,
   },
   {
     id: 'digital-certificates',
