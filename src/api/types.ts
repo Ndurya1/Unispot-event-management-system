@@ -140,10 +140,24 @@ export type AssistantToolCall = {
 
 export type AssistantToolResult = {
   name: AssistantToolName;
-  status: string;
+  status: 'succeeded' | 'failed' | 'confirmation_required';
   data: unknown;
   error: string | null;
   booking_id: string | null;
+};
+
+export type AssistantPendingConfirmation = {
+  tool: 'create_booking' | 'cancel_my_booking';
+  arguments: Record<string, unknown>;
+  confirmation_id: string;
+  idempotency_key?: string;
+  completed?: boolean;
+};
+
+export type AssistantConversationState = {
+  intent?: string;
+  slots?: Record<string, unknown>;
+  pending_confirmation?: AssistantPendingConfirmation;
 };
 
 export type AssistantMessageInput = {
@@ -160,7 +174,7 @@ export type AssistantMessageResponse = {
   response: string;
   tool_results: AssistantToolResult[];
   pending_confirmation: boolean;
-  state: Record<string, unknown>;
+  state: AssistantConversationState;
 };
 
 export type NotificationType = 'CONFIRMED' | 'CANCELLED' | 'REMINDER' | 'VENUE_CHANGE';

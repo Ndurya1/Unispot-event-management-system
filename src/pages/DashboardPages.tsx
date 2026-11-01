@@ -117,7 +117,12 @@ function useMyBookings() {
       setIsLoading(false);
     }
   }, []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    const refreshBookings = () => { void load(); };
+    window.addEventListener('unispot:bookings-changed', refreshBookings);
+    return () => window.removeEventListener('unispot:bookings-changed', refreshBookings);
+  }, [load]);
   const cancel = async (booking: ApiBooking) => {
     if (!window.confirm(`Cancel the booking for ${booking.event_name}?`)) return;
     setCancellingId(booking.id);
@@ -323,14 +328,20 @@ export function NotificationsPage() {
 
   useEffect(() => {
     let active = true;
-    listMyNotifications().then((notifications) => {
+    const loadNotifications = () => listMyNotifications().then((notifications) => {
       if (active) setItems(notifications);
     }).catch((requestError: unknown) => {
       if (active) setError(requestError instanceof ApiError ? requestError.message : 'Notifications could not be loaded.');
     }).finally(() => {
       if (active) setIsLoading(false);
     });
-    return () => { active = false; };
+    void loadNotifications();
+    const refreshNotifications = () => { void loadNotifications(); };
+    window.addEventListener('unispot:notifications-changed', refreshNotifications);
+    return () => {
+      active = false;
+      window.removeEventListener('unispot:notifications-changed', refreshNotifications);
+    };
   }, []);
 
   const markRead = async (notificationId: string) => {

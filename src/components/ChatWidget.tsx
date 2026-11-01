@@ -3,7 +3,7 @@ import { Bot, Minus, Send, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { sendAssistantMessage } from '../api/assistant';
-import type { AssistantMessageResponse } from '../api/types';
+import type { AssistantMessageResponse, AssistantPendingConfirmation } from '../api/types';
 import { useAuth } from '../auth/AuthProvider';
 
 type Message = { from: 'assistant' | 'user'; text: string };
@@ -11,8 +11,8 @@ type PendingConfirmation = { conversationId: string; confirmationId: string };
 
 function getPendingConfirmation(response: AssistantMessageResponse): PendingConfirmation | null {
   if (!response.pending_confirmation) return null;
-  const pending = response.state.pending_confirmation;
-  if (!pending || typeof pending !== 'object' || !('confirmation_id' in pending)) return null;
+  const pending: AssistantPendingConfirmation | undefined = response.state.pending_confirmation;
+  if (!pending) return null;
   const confirmationId = pending.confirmation_id;
   return typeof confirmationId === 'string'
     ? { conversationId: response.conversation_id, confirmationId }
@@ -21,7 +21,7 @@ function getPendingConfirmation(response: AssistantMessageResponse): PendingConf
 
 function responseText(response: AssistantMessageResponse) {
   const failures = response.tool_results
-    .filter((result) => result.status === 'FAILED' && result.error)
+    .filter((result) => result.status === 'failed' && result.error)
     .map((result) => result.error)
     .join(' ');
   return failures ? `${response.response} ${failures}` : response.response;
@@ -60,6 +60,10 @@ export function ChatWidget() {
     setConversationId(response.conversation_id);
     setMessages((current) => [...current, { from: 'assistant', text: responseText(response) }]);
     setPendingConfirmation(getPendingConfirmation(response));
+    if (response.tool_results.some((result) => result.status === 'succeeded' && (result.name === 'create_booking' || result.name === 'cancel_my_booking'))) {
+      window.dispatchEvent(new Event('unispot:bookings-changed'));
+      window.dispatchEvent(new Event('unispot:notifications-changed'));
+    }
   };
 
   const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
@@ -96,6 +100,9 @@ export function ChatWidget() {
         confirmation_id: pendingConfirmation.confirmationId,
       }));
     } catch (requestError) {
+      if (requestError instanceof ApiError && (requestError.status === 404 || requestError.status === 409)) {
+        setPendingConfirmation(null);
+      }
       setError(requestError instanceof ApiError ? requestError.message : 'The assistant confirmation failed.');
     } finally {
       setIsSending(false);
