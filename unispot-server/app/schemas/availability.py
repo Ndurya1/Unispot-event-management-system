@@ -1,12 +1,10 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
-
 from app.models.venue import VenueStatus
+from app.schemas.venue import VenueMetadataResponse
 
 
-class AvailabilityResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class AvailabilityResponse(VenueMetadataResponse):
     id: UUID
     name: str
     code: str

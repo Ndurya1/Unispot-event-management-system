@@ -38,6 +38,10 @@ class Venue(Base):
     location: Mapped[str] = mapped_column(String(255), nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    venue_type: Mapped[str] = mapped_column(
+        String(80), nullable=False, server_default="OTHER"
+    )
+    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     status: Mapped[VenueStatus] = mapped_column(
         SQLEnum(VenueStatus, name="venue_status"), nullable=False, server_default="ACTIVE"
     )

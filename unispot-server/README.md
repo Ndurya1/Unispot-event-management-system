@@ -12,6 +12,7 @@ Prerequisites: Python 3.13+, `uv`, and PostgreSQL.
 Copy-Item .env.example .env
 uv sync --all-groups
 uv run alembic upgrade head
+uv run python -m app.db.seed_venue_catalog
 uv run uvicorn app.main:app --reload
 ```
 

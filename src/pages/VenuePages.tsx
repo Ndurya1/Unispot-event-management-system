@@ -1,7 +1,9 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, MapPin, Users } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { venues } from '../data/mock';
+import { venues, type CampusVenue } from '../data/mock';
+import { getVenue } from '../api/venues';
+import type { ApiVenue } from '../api/types';
 
 export function VenueListPage() {
   const [capacity, setCapacity] = useState('Any capacity');
@@ -108,16 +110,52 @@ function timeToMinutes(value: string) {
   return ((hours % 12) + (period === 'PM' ? 12 : 0)) * 60 + minutes;
 }
 
+function toBookingVenue(venue: ApiVenue, selectedSlot: string): CampusVenue {
+  return {
+    id: venue.id,
+    name: venue.name,
+    location: venue.location,
+    capacity: venue.capacity,
+    image: venue.image_url || '/assets/event-innovation.jpg',
+    facilities: venue.facilities.map((facility) => facility.name),
+    available: selectedSlot ? [selectedSlot] : [],
+    availabilityTags: [],
+    description: venue.description || 'Venue details are available from the campus catalog.',
+    kind: venue.venue_type,
+  };
+}
+
 export function BookingPage() {
   const [params] = useSearchParams();
-  const venue = venues.find((item) => item.id === params.get('venue')) ?? venues[0];
+  const bookingVenueId = params.get('venue');
+  const fallbackVenue = venues.find((item) => item.id === bookingVenueId);
   const initialDate = params.get('date') ?? '';
   const initialSlot = params.get('slot') ?? '';
+  const [apiVenue, setApiVenue] = useState<ApiVenue | null>(null);
+  const [venueError, setVenueError] = useState('');
+  const apiVenueId = bookingVenueId && !fallbackVenue ? bookingVenueId : null;
+  useEffect(() => {
+    if (!apiVenueId) return;
+    let active = true;
+    getVenue(apiVenueId).then((result) => {
+      if (active) setApiVenue(result);
+    }).catch(() => {
+      if (active) setVenueError('This venue could not be loaded.');
+    });
+    return () => { active = false; };
+  }, [apiVenueId]);
+  const venue = apiVenue ? toBookingVenue(apiVenue, initialSlot) : fallbackVenue ?? venues[0];
   const [selectedSlot, setSelectedSlot] = useState(() => venue.available.includes(initialSlot) ? initialSlot : '');
   const [form, setForm] = useState<BookingFormState>(() => {
     const [startTime = '', endTime = ''] = venue.available.includes(initialSlot) ? initialSlot.split(' – ') : [];
     return { eventName: '', date: initialDate, startTime, endTime, attendance: '', purpose: '', additional: '' };
   });
+  useEffect(() => {
+    if (!apiVenue || !initialSlot) return;
+    const [startTime = '', endTime = ''] = initialSlot.split(' – ');
+    setSelectedSlot(initialSlot);
+    setForm((current) => ({ ...current, startTime, endTime }));
+  }, [apiVenue, initialSlot]);
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -136,6 +174,9 @@ export function BookingPage() {
     const matchedSlot = venue.available.find((slot) => slot === `${nextForm.startTime} – ${nextForm.endTime}`);
     setSelectedSlot(matchedSlot ?? '');
   };
+
+  if (apiVenueId && !apiVenue && !venueError) return <div className="page-wrap"><div className="empty-state"><h2>Loading booking venue…</h2></div></div>;
+  if (venueError) return <div className="page-wrap"><div className="empty-state"><h2>Venue unavailable</h2><p>{venueError}</p><Link className="button button--primary" to="/venues">Browse venues</Link></div></div>;
 
   const continueStep = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
