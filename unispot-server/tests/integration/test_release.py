@@ -628,6 +628,23 @@ async def test_http_login_booking_audit_admin_and_cancellation(
         )
         assert refreshed.status_code == 200
         client.headers["Authorization"] = "Bearer " + login.json()["access_token"]
+        current_user = await client.get("/auth/me")
+        assert current_user.status_code == 200
+        assert current_user.json()["email"] == email
+        assert len(current_user.json()["organizations"]) == 1
+        venues = await client.get("/venues", params={"capacity": 80})
+        assert venues.status_code == 200
+        assert any(row["id"] == str(data.venue_id) for row in venues.json())
+        available = await client.get(
+            "/availability",
+            params={
+                "starts_at": data.starts_at.isoformat(),
+                "ends_at": data.ends_at.isoformat(),
+                "capacity": data.expected_attendance,
+            },
+        )
+        assert available.status_code == 200
+        assert any(row["id"] == str(data.venue_id) for row in available.json())
         assert (await client.get("/admin/metrics")).status_code == 403
         assert (await client.get("/admin/allocations")).status_code == 403
         async with release_db() as session:
@@ -696,6 +713,27 @@ async def test_http_login_booking_audit_admin_and_cancellation(
         assert allocations.status_code == 200
         assert str(booking_id) in {row["id"] for row in allocations.json()}
         assert (await client.get("/admin/metrics")).status_code == 200
+        analytics = await client.get("/admin/analytics/bookings")
+        assert analytics.status_code == 200
+        assert analytics.json()["total_bookings"] == 1
+        announcement = await client.post(
+            "/admin/notifications",
+            json={
+                "recipient_group": "SYSTEM_ADMINS",
+                "title": "Release announcement",
+                "body": "Integrated journey check",
+            },
+        )
+        assert announcement.status_code == 201
+        assert announcement.json()["recipient_count"] == 1
+        notifications = await client.get("/notifications/me")
+        assert notifications.status_code == 200
+        notification = next(
+            row for row in notifications.json() if row["title"] == "Release announcement"
+        )
+        marked_read = await client.post(f"/notifications/{notification['id']}/read")
+        assert marked_read.status_code == 200
+        assert marked_read.json()["delivery_status"] == "READ"
         cancelled = await client.post(
             f"/bookings/{booking_id}/cancel",
             json={},
