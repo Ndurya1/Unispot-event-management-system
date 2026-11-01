@@ -50,6 +50,7 @@ async def list_my_bookings(
         conditions.append(Booking.starts_at < starts_to)
     result = await session.execute(
         select(Booking)
+        .options(selectinload(Booking.venue))
         .where(*conditions)
         .order_by(Booking.starts_at.desc())
         .offset(offset)
@@ -62,7 +63,9 @@ async def get_owned_booking(
     session: AsyncSession, booking_id: UUID, requester_id: UUID
 ) -> Booking | None:
     return await session.scalar(
-        select(Booking).where(
+        select(Booking)
+        .options(selectinload(Booking.venue))
+        .where(
             Booking.id == booking_id,
             Booking.requester_id == requester_id,
         )
@@ -131,13 +134,18 @@ async def cancel_booking(
                 replay_id = _booking_id_from_response(existing.response_body)
                 if replay_id is None:
                     raise CancellationError("The idempotency key has no replayable result")
-                replay = await session.get(Booking, replay_id)
+                replay = await session.scalar(
+                    select(Booking)
+                    .options(selectinload(Booking.venue))
+                    .where(Booking.id == replay_id)
+                )
                 if replay is None:
                     raise CancellationError("The original booking no longer exists")
                 return replay
 
             booking = await session.scalar(
                 select(Booking)
+                .options(selectinload(Booking.venue))
                 .where(Booking.id == booking_id, Booking.requester_id == requester.id)
                 .with_for_update()
             )

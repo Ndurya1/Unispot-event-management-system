@@ -113,6 +113,14 @@ class Booking(Base):
         "BookingEvent", back_populates="booking", cascade="all, delete-orphan"
     )
 
+    @property
+    def venue_name(self) -> str:
+        return self.venue.name
+
+    @property
+    def venue_location(self) -> str:
+        return self.venue.location
+
 
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
