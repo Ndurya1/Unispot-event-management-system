@@ -20,6 +20,7 @@ class NotificationType(StrEnum):
     CANCELLED = "CANCELLED"
     REMINDER = "REMINDER"
     VENUE_CHANGE = "VENUE_CHANGE"
+    ANNOUNCEMENT = "ANNOUNCEMENT"
 
 
 class NotificationChannel(StrEnum):

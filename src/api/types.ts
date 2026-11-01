@@ -179,3 +179,46 @@ export type ApiNotification = {
   sent_at: string | null;
   read_at: string | null;
 };
+
+export type AdminUserStatus = 'ACTIVE' | 'SUSPENDED' | 'DISABLED';
+
+export type ApiAdminUser = {
+  id: string;
+  email: string;
+  full_name: string;
+  status: AdminUserStatus;
+  created_at: string;
+  roles: string[];
+};
+
+export type AdminRecipientGroup = 'ALL_ACTIVE' | 'ORGANIZERS' | 'VENUE_ADMINS' | 'SYSTEM_ADMINS';
+
+export type AdminAnnouncementInput = {
+  recipient_group: AdminRecipientGroup;
+  title: string;
+  body: string;
+};
+
+export type AdminAnnouncementResult = {
+  recipient_group: AdminRecipientGroup;
+  recipient_count: number;
+  title: string;
+  delivery_status: 'PENDING' | 'SENT' | 'FAILED' | 'READ';
+  created_at: string;
+};
+
+export type ApiVenueBookingUsage = {
+  venue_id: string;
+  venue_name: string;
+  booking_count: number;
+  expected_attendance: number;
+};
+
+export type ApiBookingAnalytics = {
+  total_bookings: number;
+  confirmed_bookings: number;
+  cancelled_bookings: number;
+  completed_bookings: number;
+  total_expected_attendance: number;
+  venue_usage: ApiVenueBookingUsage[];
+};

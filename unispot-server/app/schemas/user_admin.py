@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,3 +21,8 @@ class UserAdminResponse(BaseModel):
     email: str
     full_name: str
     status: UserStatus
+
+
+class UserAdminListResponse(UserAdminResponse):
+    created_at: datetime
+    roles: list[str]

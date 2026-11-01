@@ -2133,6 +2133,37 @@ img { display: block; max-width: 100%; }
   color:#33405b;
   font-size:9px
 }
+.admin-user-filters {
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:12px
+}
+.admin-user-filters .admin-field {
+  min-width:150px
+}
+.admin-role-list {
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex-wrap:wrap
+}
+.admin-role-list > span {
+  padding:3px 5px;
+  border-radius:4px;
+  background:#f0efff;
+  color:#5549c7;
+  font-size:8px
+}
+.admin-role-list select,
+.admin-table td > select {
+  min-height:25px;
+  border:1px solid var(--admin-line);
+  border-radius:5px;
+  background:#fff;
+  color:#4d5870;
+  font:inherit;
+  font-size:8px
+}
 .admin-table-wrap {
   width:100%;
   overflow-x:auto

@@ -1,20 +1,55 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.dependencies.auth import require_system_admin
 from app.api.dependencies.database import get_db
-from app.models.user import User
-from app.schemas.user_admin import RoleAssignment, UserAdminResponse, UserStatusUpdate
+from app.models.user import User, UserStatus
+from app.schemas.user_admin import (
+    RoleAssignment,
+    UserAdminListResponse,
+    UserAdminResponse,
+    UserStatusUpdate,
+)
 from app.services.user_admin_service import (
     assign_user_role,
+    list_users,
     remove_user_role,
     update_user_status,
 )
 
 router = APIRouter(prefix="/admin/users", tags=["user administration"])
+
+
+@router.get("", response_model=list[UserAdminListResponse])
+async def list_all(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_system_admin)],
+    search: str | None = Query(default=None, max_length=160),
+    user_status: UserStatus | None = Query(default=None, alias="status"),  # noqa: B008
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=10000),
+) -> list[UserAdminListResponse]:
+    users = await list_users(
+        session,
+        search=search,
+        status=user_status,
+        limit=limit,
+        offset=offset,
+    )
+    return [
+        UserAdminListResponse(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            status=user.status,
+            created_at=user.created_at,
+            roles=[assignment.role.name for assignment in user.user_roles],
+        )
+        for user in users
+    ]
 
 
 @router.patch("/{user_id}/status", response_model=UserAdminResponse)

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Activity, ArrowRight, Bell, Building2, CalendarCheck, CalendarDays, ChartNoAxesColumn, CircleUserRound, ClipboardCheck, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { adminKpis } from '../../data/adminMock';
+import { getBookingAnalytics } from '../../api/admin';
+import type { ApiBookingAnalytics } from '../../api/types';
 import { AdminMetric, AdminPageHeader, AdminPanel } from './shared';
 
 const metricIcons = [Users, CalendarDays, CalendarCheck, Activity];
@@ -20,11 +22,20 @@ const venues = [
 
 export function AdminDashboardPage() {
   const [period, setPeriod] = useState('Last 30 Days');
+  const [analytics, setAnalytics] = useState<ApiBookingAnalytics | null>(null);
+  useEffect(() => { void getBookingAnalytics().then(setAnalytics).catch(() => undefined); }, []);
+  const dashboardKpis = analytics ? [
+    adminKpis[0],
+    adminKpis[1],
+    { label: 'Total Bookings', value: String(analytics.total_bookings), trend: 'Live', tone: 'mint' },
+    { label: 'Expected Attendance', value: String(analytics.total_expected_attendance), trend: 'Live', tone: 'amber' },
+  ] : adminKpis;
+  const popularVenues = analytics?.venue_usage.slice(0, 4).map((venue, index) => ({ name: venue.venue_name, value: venue.booking_count, color: ['#5146f6', '#3d88e8', '#27b39a', '#8b69dc'][index] })) ?? venues;
   return (
     <section className="admin-dashboard-page">
       <AdminPageHeader title="Dashboard" description="Overview of your UniSpot campus platform." eyebrow="PLATFORM OVERVIEW" action={<label className="admin-period-select"><CalendarDays size={15} aria-hidden="true" /><span className="sr-only">Dashboard period</span><select value={period} onChange={(event) => setPeriod(event.target.value)}><option>Last 30 Days</option><option>Last 90 Days</option><option>This Semester</option></select></label>} />
       <div className="admin-kpi-grid" aria-label={`Platform metrics for ${period}`}>
-        {adminKpis.map((metric, index) => <AdminMetric key={metric.label} {...metric} icon={metricIcons[index]} />)}
+        {dashboardKpis.map((metric, index) => <AdminMetric key={metric.label} {...metric} icon={metricIcons[index]} />)}
       </div>
 
       <div className="admin-dashboard-grid">
@@ -34,7 +45,7 @@ export function AdminDashboardPage() {
         </AdminPanel>
 
         <AdminPanel title="Popular Venues" action={<Link className="admin-panel-link" to="/admin/venues">View all <ArrowRight size={13} /></Link>}>
-          <div className="admin-popular-venues"><div className="admin-donut" role="img" aria-label="Sample popular venues: Great Hall 42 percent, Seminar Room A 26 percent, Auditorium 18 percent, Conference Room 14 percent"><span>Bookings<small>by venue</small></span></div><ul>{venues.map((venue) => <li key={venue.name}><i style={{ background: venue.color }} /><span>{venue.name}</span><strong>{venue.value}%</strong></li>)}</ul></div>
+          <div className="admin-popular-venues"><div className="admin-donut" role="img" aria-label="Booking counts by venue from the live admin analytics response"><span>Bookings<small>by venue</small></span></div><ul>{popularVenues.map((venue) => <li key={venue.name}><i style={{ background: venue.color }} /><span>{venue.name}</span><strong>{venue.value}</strong></li>)}</ul></div>
         </AdminPanel>
 
         <AdminPanel title="Recent Activity" action={<Link className="admin-panel-link" to="/admin/audit-logs">View all <ArrowRight size={13} /></Link>}>
@@ -46,7 +57,7 @@ export function AdminDashboardPage() {
         <section className="admin-announcement"><span className="admin-announcement-icon"><Bell size={21} aria-hidden="true" /></span><div><strong>System Announcement</strong><p>The platform will be under maintenance on 12th October 2026 from 8:00 AM–12:00 PM.</p></div><Link className="button button--primary button--small" to="/admin/maintenance">View details</Link></section>
         <AdminPanel title="Quick Actions" className="admin-quick-panel"><div className="admin-quick-actions"><Link to="/admin/venues?create=1"><span><Building2 size={16} /></span>Add Venue</Link><Link to="/admin/events?create=1"><span><CalendarDays size={16} /></span>Add Event</Link><Link to="/admin/users?create=1"><span><Users size={16} /></span>Add User</Link><Link to="/admin/analytics-reports"><span><ChartNoAxesColumn size={16} /></span>View Reports</Link></div></AdminPanel>
       </div>
-      <p className="admin-sample-note">Illustrative sample figures for the interface preview. No live campus records are connected.</p>
+      <p className="admin-sample-note">User/event totals remain illustrative until their backend contracts are added. Booking totals and venue usage use the Admin API when available.</p>
     </section>
   );
 }

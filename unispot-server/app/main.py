@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.admin_allocations import router as admin_allocations_router
+from app.api.routes.admin_analytics import router as admin_analytics_router
+from app.api.routes.admin_notifications import router as admin_notifications_router
 from app.api.routes.assistant import router as assistant_router
 from app.api.routes.audit import router as audit_router
 from app.api.routes.auth import router as auth_router
@@ -69,6 +71,8 @@ def create_application(settings: Settings | None = None) -> FastAPI:
     application.include_router(availability_router)
     application.include_router(bookings_router)
     application.include_router(admin_allocations_router)
+    application.include_router(admin_analytics_router)
+    application.include_router(admin_notifications_router)
     application.include_router(notifications_router)
     application.include_router(audit_router)
     application.include_router(assistant_router)
