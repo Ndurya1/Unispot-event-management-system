@@ -1,7 +1,7 @@
 import { apiFetch } from './client';
 import type { ApiBooking, BookingStatus, CreateBookingInput } from './types';
 
-function createIdempotencyKey() {
+function createIdempotencyKey(): string {
   return crypto.randomUUID();
 }
 
@@ -21,7 +21,7 @@ export async function listMyBookings(params: {
   return (await apiFetch<ApiBooking[]>(`/bookings/me?${query}`)).data;
 }
 
-export async function createBooking(input: CreateBookingInput, idempotencyKey = createIdempotencyKey()) {
+export async function createBooking(input: CreateBookingInput, idempotencyKey: string = createIdempotencyKey()) {
   return (await apiFetch<ApiBooking>('/bookings', {
     method: 'POST',
     headers: { 'Idempotency-Key': idempotencyKey },
@@ -29,7 +29,7 @@ export async function createBooking(input: CreateBookingInput, idempotencyKey = 
   })).data;
 }
 
-export async function cancelBooking(bookingId: string, reason?: string, idempotencyKey = createIdempotencyKey()) {
+export async function cancelBooking(bookingId: string, reason?: string, idempotencyKey: string = createIdempotencyKey()) {
   return (await apiFetch<ApiBooking>(`/bookings/${bookingId}/cancel`, {
     method: 'POST',
     headers: { 'Idempotency-Key': idempotencyKey },

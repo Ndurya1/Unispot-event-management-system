@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Bell, ChevronDown, Menu, X } from 'lucide-react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Brand } from './Brand';
 import { ChatWidget } from './ChatWidget';
 import { useAuth } from '../auth/AuthProvider';
+import { listMyNotifications } from '../api/notifications';
 
 const primaryLinks = [
   { to: '/', label: 'Home', end: true },
@@ -17,7 +18,28 @@ const primaryLinks = [
 export function SiteLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
   const initials = user?.full_name.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase();
+
+  const refreshUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const notifications = await listMyNotifications({ limit: 100 });
+      setUnreadCount(notifications.filter((item) => item.delivery_status !== 'READ' && !item.read_at).length);
+    } catch {
+      // The notification page owns the visible request error; keep the shell quiet.
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    void refreshUnreadCount();
+    const handleNotificationChange = () => { void refreshUnreadCount(); };
+    window.addEventListener('unispot:notifications-changed', handleNotificationChange);
+    return () => window.removeEventListener('unispot:notifications-changed', handleNotificationChange);
+  }, [refreshUnreadCount]);
 
   return (
     <div className="app-frame">
@@ -33,7 +55,7 @@ export function SiteLayout() {
             </div>
           </nav>
           <div className="topbar-actions">
-            {isAuthenticated && <Link className="icon-button notification-button" to="/notifications" aria-label="Notifications"><Bell size={18} /></Link>}
+            {isAuthenticated && <Link className="icon-button notification-button" to="/notifications" aria-label={unreadCount ? `${unreadCount} unread notifications` : 'Notifications'}><Bell size={18} />{unreadCount > 0 && <span className="notification-count-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}</Link>}
             {user ? <><Link className="topbar-profile" to="/student/dashboard" aria-label="Open your profile and dashboard"><span className="avatar avatar--small" aria-hidden="true">{initials}</span><span className="topbar-profile-name">{user.full_name}</span><ChevronDown size={15} aria-hidden="true" /></Link><button className="text-button" type="button" onClick={logout}>Log out</button></> : <Link className="text-button" to="/login">Log in</Link>}
             <button className="icon-button mobile-menu-toggle" type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
           </div>

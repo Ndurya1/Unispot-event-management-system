@@ -21,7 +21,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { events } from '../data/mock';
 import { ApiError } from '../api/client';
 import { cancelBooking, listMyBookings } from '../api/bookings';
-import type { ApiBooking } from '../api/types';
+import { listMyNotifications, markNotificationRead } from '../api/notifications';
+import type { ApiBooking, ApiNotification, NotificationType } from '../api/types';
 
 type DashboardLink = { to: string; label: string; icon: typeof CalendarDays };
 
@@ -295,29 +296,87 @@ export function OrganizerDashboardPage() {
   );
 }
 
-const initialNotifications = [
-  { id: 1, title: 'Your booking for Great Hall has been confirmed.', body: 'Great Hall · 12 Apr 2026 · 10:00 AM–4:00 PM', time: '10 minutes ago', icon: CalendarCheck, read: false },
-  { id: 2, title: 'Innovation & Tech Day registration is now open.', body: 'Join students, experts, and innovators for a day of hands-on learning.', time: 'Yesterday', icon: CalendarDays, read: false },
-  { id: 3, title: 'Your venue booking request is being processed.', body: 'Seminar Room B · 16 Apr 2026', time: '2 days ago', icon: ClipboardList, read: true },
-  { id: 4, title: 'A new campus event has been added.', body: 'Leadership Workshop · Lecture Hall A', time: '3 days ago', icon: Megaphone, read: true },
-];
+function notificationIcon(type: NotificationType) {
+  if (type === 'CONFIRMED' || type === 'CANCELLED') return CalendarCheck;
+  if (type === 'REMINDER') return Bell;
+  return ClipboardList;
+}
+
+function formatNotificationTime(value: string) {
+  return new Intl.DateTimeFormat('en-KE', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Africa/Nairobi',
+  }).format(new Date(value));
+}
+
+function notifyCountChanged() {
+  window.dispatchEvent(new Event('unispot:notifications-changed'));
+}
 
 export function NotificationsPage() {
-  const [items, setItems] = useState(initialNotifications);
-  const unread = items.filter((item) => !item.read).length;
+  const [items, setItems] = useState<ApiNotification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const unread = items.filter((item) => item.delivery_status !== 'READ' && !item.read_at).length;
+
+  useEffect(() => {
+    let active = true;
+    listMyNotifications().then((notifications) => {
+      if (active) setItems(notifications);
+    }).catch((requestError: unknown) => {
+      if (active) setError(requestError instanceof ApiError ? requestError.message : 'Notifications could not be loaded.');
+    }).finally(() => {
+      if (active) setIsLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const markRead = async (notificationId: string) => {
+    setBusyId(notificationId);
+    setError('');
+    try {
+      const updated = await markNotificationRead(notificationId);
+      setItems((current) => current.map((item) => item.id === updated.id ? updated : item));
+      notifyCountChanged();
+    } catch (requestError) {
+      setError(requestError instanceof ApiError ? requestError.message : 'The notification could not be marked as read.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const markAllRead = async () => {
+    const unreadItems = items.filter((item) => item.delivery_status !== 'READ' && !item.read_at);
+    setBusyId('all');
+    setError('');
+    try {
+      const updated = await Promise.all(unreadItems.map((item) => markNotificationRead(item.id)));
+      setItems((current) => current.map((item) => updated.find((notification) => notification.id === item.id) || item));
+      notifyCountChanged();
+    } catch (requestError) {
+      setError(requestError instanceof ApiError ? requestError.message : 'Notifications could not be marked as read.');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="page-wrap notifications-page">
-      <div className="page-heading page-heading--split"><div><span className="eyebrow">CAMPUS UPDATES</span><h1>Notifications</h1><p>Stay in the loop with your bookings and events.</p></div><button type="button" className="button button--outline" onClick={() => setItems((current) => current.map((item) => ({ ...item, read: true })))}><ShieldCheck size={16} />Mark all as read</button></div>
-      <div className="notifications-summary"><span className="notification-count">{unread}</span><span><strong>{unread} unread</strong><small>Recent updates from your campus community</small></span><Link className="text-link" to="/student/dashboard">Back to dashboard <ArrowRight size={15} /></Link></div>
-      <div className="notification-list">
-        {items.map(({ id, title, body, time, icon: Icon, read }) => (
-          <article className={`notification-card${read ? '' : ' notification-card--unread'}`} key={id}>
-            <span className="notification-icon"><Icon size={19} /></span><div><h2>{title}</h2><p>{body}</p><span className="notification-time">{time}</span></div>
-            {!read && <button className="mark-read-button" type="button" aria-label={`Mark as read: ${title}`} onClick={() => setItems((current) => current.map((item) => item.id === id ? { ...item, read: true } : item))}><Check size={16} /></button>}
-          </article>
-        ))}
-      </div>
+      <div className="page-heading page-heading--split"><div><span className="eyebrow">CAMPUS UPDATES</span><h1>Notifications</h1><p>Stay in the loop with your bookings and events.</p></div><button type="button" className="button button--outline" onClick={() => void markAllRead()} disabled={busyId !== null || unread === 0}><ShieldCheck size={16} />{busyId === 'all' ? 'Marking read…' : 'Mark all as read'}</button></div>
+      <div className="notifications-summary"><span className="notification-count">{unread}</span><span><strong>{unread} unread</strong><small>Recent updates from your campus activity</small></span><Link className="text-link" to="/student/dashboard">Back to dashboard <ArrowRight size={15} /></Link></div>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {isLoading && <p className="form-status">Loading notifications…</p>}
+      {!isLoading && !error && items.length === 0 && <div className="empty-state"><h2>No notifications yet</h2><p>Booking and campus updates will appear here.</p></div>}
+      {!isLoading && <div className="notification-list">{items.map((item) => {
+        const read = item.delivery_status === 'READ' || item.read_at !== null;
+        const Icon = notificationIcon(item.type);
+        return <article className={`notification-card${read ? '' : ' notification-card--unread'}`} key={item.id}>
+          <span className="notification-icon"><Icon size={19} /></span><div><h2>{item.title}</h2><p>{item.body}</p><span className="notification-time">{formatNotificationTime(item.created_at)}</span></div>
+          {!read && <button className="mark-read-button" type="button" disabled={busyId !== null} aria-label={`Mark as read: ${item.title}`} onClick={() => void markRead(item.id)}><Check size={16} /></button>}
+        </article>;
+      })}</div>}
       <div className="notification-help"><div><span className="help-icon"><Bell size={18} /></span><div><strong>Want fewer updates?</strong><p>Manage the kind of campus updates you see in your profile settings.</p></div></div><Link to="/student/dashboard#settings" className="text-link">Notification settings <ArrowRight size={15} /></Link></div>
     </div>
   );
