@@ -1,7 +1,81 @@
-import { useState, type FormEvent } from 'react';
-import { ArrowDownToLine, BarChart3, Bell, CalendarCheck, CalendarDays, Check, Clock3, Download, FileText, ListChecks, ShieldCheck, Users } from 'lucide-react';
-import { adminKpis, adminSectionData, type AdminSectionId } from '../../data/adminMock';
+import { useEffect, useState, type FormEvent } from 'react';
+import { ArrowDownToLine, Bell, CalendarCheck, CalendarDays, Check, Clock3, Download, ListChecks, ShieldCheck, Users } from 'lucide-react';
+import { adminSectionData, type AdminSectionId } from '../../data/adminMock';
+import { adminRecipientGroups, getBookingAnalytics, sendAdminAnnouncement, listAdminUsers, updateAdminUserStatus, assignAdminUserRole, removeAdminUserRole } from '../../api/admin';
+import type { AdminUserStatus, ApiAdminUser, ApiBookingAnalytics } from '../../api/types';
 import { AdminFeedback, AdminMetric, AdminPageHeader, AdminPanel, AdminStatus } from './shared';
+
+const adminRoles = ['ORGANIZER', 'VENUE_ADMIN', 'SYSTEM_ADMIN'];
+
+export function AdminUsersSection() {
+  const [users, setUsers] = useState<ApiAdminUser[]>([]);
+  const [filter, setFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<AdminUserStatus | ''>('');
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState('');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+
+  const loadUsers = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setUsers(await listAdminUsers({ search: filter || undefined, status: statusFilter || undefined }));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Users could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void loadUsers(); }, [filter, statusFilter]);
+
+  const changeStatus = async (user: ApiAdminUser, status: AdminUserStatus) => {
+    setBusyId(user.id);
+    setNotice('');
+    try {
+      await updateAdminUserStatus(user.id, status);
+      setNotice(`${user.full_name}'s account status was updated.`);
+      await loadUsers();
+    } catch (statusError) {
+      setError(statusError instanceof Error ? statusError.message : 'The account status could not be updated.');
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  const changeRole = async (user: ApiAdminUser, roleName: string) => {
+    if (!roleName) return;
+    setBusyId(user.id);
+    setNotice('');
+    try {
+      if (user.roles.includes(roleName)) await removeAdminUserRole(user.id, roleName);
+      else await assignAdminUserRole(user.id, roleName);
+      setNotice(`${roleName} was ${user.roles.includes(roleName) ? 'removed from' : 'assigned to'} ${user.full_name}.`);
+      await loadUsers();
+    } catch (roleError) {
+      setError(roleError instanceof Error ? roleError.message : 'The role could not be updated.');
+    } finally {
+      setBusyId('');
+    }
+  };
+
+  return <section className="admin-page">
+    <AdminPageHeader title="User Management" description="Search campus accounts and manage status and administrator-controlled roles." action={<span className="admin-preview-tag">Live admin data</span>} />
+    <div className="admin-policy-callout"><ShieldCheck size={18} aria-hidden="true" /><span><strong>User creation remains unavailable.</strong> Registration is handled through the public authentication flow; this screen manages existing accounts only.</span></div>
+    <AdminPanel title="Campus users" action={<div className="admin-table-search"><SearchIcon /><label className="sr-only" htmlFor="admin-user-search">Search users</label><input id="admin-user-search" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Search name or email" /></div>}>
+      <div className="admin-user-filters"><label className="admin-field"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as AdminUserStatus | '')}><option value="">All statuses</option><option value="ACTIVE">Active</option><option value="SUSPENDED">Suspended</option><option value="DISABLED">Disabled</option></select></label></div>
+      {error && <AdminFeedback tone="warning">{error}</AdminFeedback>}
+      {notice && <AdminFeedback tone="success">{notice}</AdminFeedback>}
+      {loading ? <p className="admin-empty-state">Loading users…</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th scope="col">User</th><th scope="col">Email</th><th scope="col">Roles</th><th scope="col">Joined</th><th scope="col">Status</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead><tbody>{users.map((user) => <tr key={user.id}><td>{user.full_name}</td><td>{user.email}</td><td><div className="admin-role-list">{user.roles.length ? user.roles.map((role) => <span key={role}>{role}</span>) : <span>—</span>}<select aria-label={`Change role for ${user.full_name}`} value="" disabled={busyId === user.id} onChange={(event) => { void changeRole(user, event.target.value); }}><option value="">Manage role…</option>{adminRoles.map((role) => <option key={role} value={role}>{user.roles.includes(role) ? `Remove ${role}` : `Assign ${role}`}</option>)}</select></div></td><td>{new Date(user.created_at).toLocaleDateString('en-KE')}</td><td><select aria-label={`Change status for ${user.full_name}`} value={user.status} disabled={busyId === user.id} onChange={(event) => { void changeStatus(user, event.target.value as AdminUserStatus); }}><option value="ACTIVE">Active</option><option value="SUSPENDED">Suspended</option><option value="DISABLED">Disabled</option></select></td><td><span className="admin-mono">{user.id.slice(0, 8)}</span></td></tr>)}{users.length === 0 && <tr><td className="admin-empty-cell" colSpan={6}>No users match the current filters.</td></tr>}</tbody></table></div>}
+      <div className="admin-table-footer"><span>{users.length} live records shown</span><span className="admin-preview-tag">Server-enforced</span></div>
+    </AdminPanel>
+  </section>;
+}
+
+function SearchIcon() {
+  return <span aria-hidden="true">⌕</span>;
+}
 
 export function AdminSpecialSection({ sectionId }: { sectionId: AdminSectionId }) {
   if (sectionId === 'analytics-reports') return <AnalyticsSection />;
@@ -12,14 +86,13 @@ export function AdminSpecialSection({ sectionId }: { sectionId: AdminSectionId }
 }
 
 function AnalyticsSection() {
-  const [notice, setNotice] = useState('');
-  return <section className="admin-page"><AdminPageHeader title="Analytics & Reports" description="Platform-wide activity across users, events, bookings, and attendance." action={<div className="admin-report-buttons"><button className="button button--primary button--small" type="button" onClick={() => setNotice('Report prepared as a preview action only. No file was exported.') }><ArrowDownToLine size={14} />Export Report</button><button className="button button--outline button--small" type="button" onClick={() => setNotice('PDF export is not connected in this frontend prototype.') }><Download size={14} />Download PDF</button></div>} />
-    <p className="admin-sample-note">SAMPLE PLATFORM METRICS · NOT CONNECTED TO LIVE RECORDS</p>
-    <div className="admin-kpi-grid admin-kpi-grid--compact">{adminKpis.map((metric, index) => { const icons = [Users, CalendarDays, CalendarCheck, BarChart3]; return <AdminMetric key={metric.label} {...metric} icon={icons[index]} />; })}</div>
-    <div className="admin-analytics-grid"><AdminPanel title="Event Registrations Trend"><figure className="admin-line-chart"><svg viewBox="0 0 640 220" role="img" aria-label="Illustrative registration trend over the last seven months" preserveAspectRatio="none"><g className="admin-grid-lines"><line x1="42" y1="25" x2="626" y2="25"/><line x1="42" y1="72" x2="626" y2="72"/><line x1="42" y1="119" x2="626" y2="119"/><line x1="42" y1="166" x2="626" y2="166"/></g><path className="admin-chart-area" d="M42 157 L125 140 L208 148 L291 107 L374 121 L457 77 L540 91 L626 31 L626 190 L42 190Z"/><polyline className="admin-chart-line" points="42,157 125,140 208,148 291,107 374,121 457,77 540,91 626,31"/></svg><figcaption><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span></figcaption></figure></AdminPanel>
-      <AdminPanel title="Top Venues"><ul className="admin-top-venues">{[['Great Hall', '42%'], ['Seminar Room A', '26%'], ['Auditorium', '18%'], ['Conference Room', '14%']].map(([name, value]) => <li key={name}><span>{name}</span><i><b style={{ width: value }} /></i><strong>{value}</strong></li>)}</ul></AdminPanel></div>
-    <div className="admin-analytics-foot"><AdminPanel title="Report coverage"><p>Registration trends, popular venues, attendance, event categories, booking outcomes, and provider activity.</p><p className="admin-inline-note"><ShieldCheck size={15} /> Exports will become available after reporting is connected to the Admin API.</p></AdminPanel><AdminPanel title="Recent reporting activity"><ul className="admin-activity-list"><li><span className="admin-activity-icon"><FileText size={14}/></span><span><strong>Attendance summary viewed</strong><small>Today · preview data</small></span></li><li><span className="admin-activity-icon"><BarChart3 size={14}/></span><span><strong>Registration trend refreshed</strong><small>Today · preview data</small></span></li></ul></AdminPanel></div>
-    <AdminFeedback>{notice}</AdminFeedback>
+  const [analytics, setAnalytics] = useState<ApiBookingAnalytics | null>(null);
+  const [error, setError] = useState('');
+  useEffect(() => { void getBookingAnalytics().then(setAnalytics).catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Analytics could not be loaded.')); }, []);
+  return <section className="admin-page"><AdminPageHeader title="Analytics & Reports" description="Live booking aggregates from the Admin API; event, attendance, provider, and export reporting remain unavailable." action={<div className="admin-report-buttons"><button className="button button--primary button--small" type="button" onClick={() => setError('Report export is not available in the current API.')}><ArrowDownToLine size={14} />Export unavailable</button><button className="button button--outline button--small" type="button" onClick={() => setError('PDF export is not available in the current API.')}><Download size={14} />PDF unavailable</button></div>} />
+    {error && <AdminFeedback tone="warning">{error}</AdminFeedback>}
+    {!analytics ? <p className="admin-empty-state">Loading booking analytics…</p> : <><div className="admin-kpi-grid admin-kpi-grid--compact"><AdminMetric label="Total Bookings" value={String(analytics.total_bookings)} trend="Live" icon={CalendarCheck} tone="mint" /><AdminMetric label="Confirmed" value={String(analytics.confirmed_bookings)} trend="Live" icon={Check} tone="violet" /><AdminMetric label="Cancelled" value={String(analytics.cancelled_bookings)} trend="Live" icon={CalendarDays} tone="amber" /><AdminMetric label="Expected Attendance" value={String(analytics.total_expected_attendance)} trend="Live" icon={Users} tone="blue" /></div><AdminPanel title="Booking usage by venue"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th scope="col">Venue</th><th scope="col">Bookings</th><th scope="col">Expected attendance</th></tr></thead><tbody>{analytics.venue_usage.map((venue) => <tr key={venue.venue_id}><td>{venue.venue_name}</td><td>{venue.booking_count}</td><td>{venue.expected_attendance}</td></tr>)}{analytics.venue_usage.length === 0 && <tr><td className="admin-empty-cell" colSpan={3}>No booking records match the current dataset.</td></tr>}</tbody></table></div></AdminPanel></>}
+    <p className="admin-sample-note">Live booking aggregates only. No report file or cross-domain analytics export is connected.</p>
   </section>;
 }
 
@@ -46,11 +119,11 @@ function PoliciesSection() {
 function NotificationsSection() {
   const [notice, setNotice] = useState('');
   const [noticeTone, setNoticeTone] = useState<'info' | 'success' | 'warning'>('info');
-  const [recipient, setRecipient] = useState('All campus users');
+  const [recipient, setRecipient] = useState(adminRecipientGroups[0].value);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState('Send now (demo)');
   const [preview, setPreview] = useState<{ title: string; message: string; recipient: string; deliveryTime: string } | null>(null);
+  const [isSending, setIsSending] = useState(false);
   const clearPreview = () => { setPreview(null); setNotice(''); };
   const preparePreview = () => {
     const cleanTitle = title.trim();
@@ -61,7 +134,7 @@ function NotificationsSection() {
       setNotice('Add an announcement title and message before previewing or demo-sending.');
       return false;
     }
-    setPreview({ title: cleanTitle, message: cleanMessage, recipient, deliveryTime });
+    setPreview({ title: cleanTitle, message: cleanMessage, recipient, deliveryTime: 'In-app queue' });
     return true;
   };
   const previewAnnouncement = (event: FormEvent<HTMLFormElement>) => {
@@ -71,22 +144,32 @@ function NotificationsSection() {
       setNotice('Message preview updated below. No notification was sent.');
     }
   };
-  const sendDemo = () => {
-    if (preparePreview()) {
+  const sendAnnouncement = async () => {
+    if (!preparePreview()) return;
+    setIsSending(true);
+    setNotice('');
+    try {
+      const result = await sendAdminAnnouncement({ recipient_group: recipient, title: title.trim(), body: message.trim() });
       setNoticeTone('success');
-      setNotice(`Demo send prepared for ${recipient}. No email, SMS, or push notification was sent.`);
+      setNotice(`Announcement queued for ${result.recipient_count} active recipient${result.recipient_count === 1 ? '' : 's'}. It will appear as an in-app notification.`);
+      setTitle('');
+      setMessage('');
+    } catch (sendError) {
+      setNoticeTone('warning');
+      setNotice(sendError instanceof Error ? sendError.message : 'The announcement could not be sent.');
+    } finally {
+      setIsSending(false);
     }
   };
-  return <section className="admin-page"><AdminPageHeader title="Notification Management" description="Compose system notices for selected audiences; review the preview before delivery is connected." />
+  return <section className="admin-page"><AdminPageHeader title="Notification Management" description="Send one-time in-app announcements to active role groups. Email, SMS, push, and scheduling are not connected." />
     <div className="admin-special-two-col"><AdminPanel title="Compose announcement"><form className="admin-notification-form" onSubmit={previewAnnouncement}>
       <label className="admin-field"><span>Announcement title</span><input name="title" required value={title} onChange={(event) => { setTitle(event.target.value); clearPreview(); }} placeholder="e.g. Scheduled platform maintenance" /></label>
-      <label className="admin-field"><span>Recipient group</span><select value={recipient} onChange={(event) => { setRecipient(event.target.value); clearPreview(); }}><option>All campus users</option><option>Students</option><option>Organizers</option><option>Service providers</option><option>University staff</option></select></label>
+      <label className="admin-field"><span>Recipient group</span><select value={recipient} onChange={(event) => { setRecipient(event.target.value as typeof recipient); clearPreview(); }}>{adminRecipientGroups.map((group) => <option key={group.value} value={group.value}>{group.label}</option>)}</select></label>
       <label className="admin-field"><span>Message</span><textarea name="message" rows={5} required value={message} onChange={(event) => { setMessage(event.target.value); clearPreview(); }} placeholder="Write a clear update for the selected audience…" /></label>
-      <label className="admin-field"><span>Delivery time</span><select value={deliveryTime} onChange={(event) => { setDeliveryTime(event.target.value); clearPreview(); }}><option>Send now (demo)</option><option>Schedule for later (demo)</option></select></label>
-      <p className="admin-inline-note"><Bell size={15} aria-hidden="true" /> This preview will not send email, SMS, or push notifications.</p>
-      <div className="admin-notification-actions"><button className="button button--outline button--small" type="submit">Preview announcement</button><button className="button button--primary button--small" type="button" onClick={sendDemo}>Send demo</button></div>
+      <p className="admin-inline-note"><Bell size={15} aria-hidden="true" /> Only in-app delivery is connected. The announcement is queued for the selected active users.</p>
+      <div className="admin-notification-actions"><button className="button button--outline button--small" type="submit">Preview announcement</button><button className="button button--primary button--small" type="button" onClick={() => { void sendAnnouncement(); }} disabled={isSending}>{isSending ? 'Sending…' : 'Send announcement'}</button></div>
     </form>
-    {preview && <section className="admin-notification-preview" aria-labelledby="admin-notification-preview-title"><p className="admin-notification-preview-meta"><Bell size={14} aria-hidden="true" /> Announcement preview</p><p className="admin-notification-preview-audience"><strong>Audience:</strong> {preview.recipient} · {preview.deliveryTime}</p><h3 id="admin-notification-preview-title">{preview.title}</h3><p className="admin-notification-preview-copy">{preview.message}</p><p className="admin-inline-note"><ShieldCheck size={15} aria-hidden="true" /> Local preview only. No message was sent.</p></section>}
+    {preview && <section className="admin-notification-preview" aria-labelledby="admin-notification-preview-title"><p className="admin-notification-preview-meta"><Bell size={14} aria-hidden="true" /> Announcement preview</p><p className="admin-notification-preview-audience"><strong>Audience:</strong> {adminRecipientGroups.find((group) => group.value === preview.recipient)?.label} · {preview.deliveryTime}</p><h3 id="admin-notification-preview-title">{preview.title}</h3><p className="admin-notification-preview-copy">{preview.message}</p><p className="admin-inline-note"><ShieldCheck size={15} aria-hidden="true" /> Review before sending. The server will target active users in this group.</p></section>}
     </AdminPanel>
       <AdminPanel title="Recent announcements"><ul className="admin-announcement-list"><li><span className="admin-notice-dot admin-notice-dot--violet"/><div><strong>Planned maintenance</strong><small>All campus users · Draft preview</small></div><AdminStatus>Draft</AdminStatus></li><li><span className="admin-notice-dot admin-notice-dot--mint"/><div><strong>Event registration reminder</strong><small>Students · Sample record</small></div><AdminStatus>Sent (sample)</AdminStatus></li><li><span className="admin-notice-dot admin-notice-dot--amber"/><div><strong>Provider directory update</strong><small>Service providers · Sample record</small></div><AdminStatus>Scheduled</AdminStatus></li></ul></AdminPanel></div>
     <AdminFeedback tone={noticeTone}>{notice}</AdminFeedback>

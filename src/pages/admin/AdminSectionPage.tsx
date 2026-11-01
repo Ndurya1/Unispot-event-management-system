@@ -3,7 +3,7 @@ import { ArrowRight, Plus, Search, ShieldCheck } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { adminSectionData, type AdminField, type AdminRow, type AdminSectionId } from '../../data/adminMock';
 import { AdminFeedback, AdminPageHeader, AdminPanel, AdminStatus } from './shared';
-import { AdminSpecialSection } from './AdminSpecialSections';
+import { AdminSpecialSection, AdminUsersSection } from './AdminSpecialSections';
 
 const specialSections = new Set<AdminSectionId>(['analytics-reports', 'notifications', 'policies-rules', 'waitlists', 'system-settings']);
 
@@ -34,6 +34,7 @@ export function AdminSectionPage() {
   }, [rows, filter]);
 
   if (section === 'search') return <AdminSearchResults />;
+  if (section === 'users') return <AdminUsersSection />;
   if (!definition) {
     return <section className="admin-page"><AdminPageHeader title="Section not found" description="Choose a valid Admin destination from the sidebar." /><Link className="button button--primary" to="/admin">Return to Dashboard <ArrowRight size={15} /></Link></section>;
   }

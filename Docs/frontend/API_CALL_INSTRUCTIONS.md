@@ -400,10 +400,21 @@ GET    /admin/metrics                 # system administrators
 PATCH  /admin/users/{id}/status       # system administrators
 POST   /admin/users/{id}/roles        # system administrators
 DELETE /admin/users/{id}/roles/{role} # system administrators
+GET    /admin/users                    # system administrators; bounded search/status list
+POST   /admin/notifications             # system administrators; in-app announcement broadcast
+GET    /admin/analytics/bookings        # system administrators; booking aggregates and venue usage
 ```
 
 There are no approve, reject, prioritize, or reassign booking calls. Do not add
 those controls to the UI or client API layer.
+
+The admin user list supports `search`, `status`, `limit`, and `offset`. User
+creation remains on the public registration flow. Admin announcements target
+active users in one of `ALL_ACTIVE`, `ORGANIZERS`, `VENUE_ADMINS`, or
+`SYSTEM_ADMINS`; delivery is currently in-app only and is queued through the
+existing notification worker. The booking analytics response reports counts by
+booking status, expected attendance, and the ten most-used venues. It is not a
+replacement for event-registration, attendance, provider, or export reporting.
 
 ## Frontend implementation checklist
 

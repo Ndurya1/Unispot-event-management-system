@@ -118,6 +118,12 @@ def test_openapi_error_contract_and_no_approval_controls(client: TestClient) -> 
     assert "/auth/register" in document["paths"]
     assert "/auth/token" in document["paths"]
     assert "/admin/metrics" in document["paths"]
+    assert "/admin/users" in document["paths"]
+    assert "/admin/notifications" in document["paths"]
+    assert "/admin/analytics/bookings" in document["paths"]
     assert document["paths"]["/bookings"]["post"]["responses"]["429"]["content"]
     assert not any("approve" in path or "reject" in path for path in document["paths"])
     assert client.get("/admin/metrics").status_code in {401, 403}
+    assert client.get("/admin/users").status_code in {401, 403}
+    assert client.post("/admin/notifications", json={}).status_code in {401, 403, 422}
+    assert client.get("/admin/analytics/bookings").status_code in {401, 403}

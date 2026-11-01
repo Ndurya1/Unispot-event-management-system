@@ -1,14 +1,41 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
 from app.models.booking import BookingSource
 from app.models.role import Role
 from app.models.user import User, UserStatus
 from app.models.user_role import UserRoles
+
+
+async def list_users(
+    session: AsyncSession,
+    *,
+    search: str | None = None,
+    status: UserStatus | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[User]:
+    statement = (
+        select(User)
+        .options(selectinload(User.user_roles).selectinload(UserRoles.role))
+        .order_by(User.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        statement = statement.where(
+            or_(User.full_name.ilike(pattern), User.email.ilike(pattern))
+        )
+    if status is not None:
+        statement = statement.where(User.status == status)
+    result = await session.execute(statement)
+    return list(result.scalars().unique().all())
 
 
 async def update_user_status(
