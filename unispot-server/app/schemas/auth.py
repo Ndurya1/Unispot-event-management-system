@@ -1,4 +1,8 @@
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr, Field
+
+from app.models.user import UserStatus
 
 
 class RegisterRequest(BaseModel):
@@ -25,3 +29,20 @@ class RefreshTokenRequest(BaseModel):
 class RefreshTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class OrganizationMembershipSummary(BaseModel):
+    id: UUID
+    organization_id: UUID
+    name: str
+    slug: str
+    membership_role: str
+
+
+class CurrentUserResponse(BaseModel):
+    id: UUID
+    full_name: str
+    email: EmailStr
+    status: UserStatus
+    roles: list[str]
+    organizations: list[OrganizationMembershipSummary]
