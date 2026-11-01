@@ -42,6 +42,23 @@ the database is unavailable.
 CI provides `TEST_DATABASE_URL` automatically for the PostgreSQL-backed
 integration check.
 
+The frontend uses pnpm and the committed `pnpm-lock.yaml` in CI. From the
+repository root, run `pnpm install --frozen-lockfile`, `pnpm run typecheck`, and
+`pnpm run build` to reproduce the frontend quality job. The frontend currently
+does not define a separate lint script or browser-test runner.
+
+To run the release journeys locally, set `TEST_DATABASE_URL` to a PostgreSQL
+database whose test user can create databases, then run:
+
+```powershell
+uv run pytest tests/integration/test_release.py
+```
+
+The release suite creates and removes its own disposable database. It verifies
+authentication and permissions, venue discovery and availability, booking
+creation/cancellation and persistence, duplicate/conflict handling, assistant
+confirmation behavior, notifications, and supported administrator flows.
+
 ## In-app assistant
 
 The authenticated React client sends conversational turns to
