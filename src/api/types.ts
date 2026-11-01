@@ -46,3 +46,46 @@ export type ApiResult<T> = {
   requestId: string | null;
   response: Response;
 };
+
+export type VenueStatus = 'ACTIVE' | 'INACTIVE' | 'MAINTENANCE';
+
+export type FacilitySummary = {
+  id: string;
+  name: string;
+};
+
+export type ApiVenue = {
+  id: string;
+  name: string;
+  code: string;
+  location: string;
+  capacity: number;
+  description: string | null;
+  status: VenueStatus;
+  timezone: string;
+  booking_buffer_minutes: number;
+  venue_type: string;
+  image_url: string | null;
+  facilities: FacilitySummary[];
+};
+
+export type Facility = FacilitySummary;
+
+export type VenueListParams = {
+  capacity?: number;
+  location?: string;
+  facilityId?: string;
+  status?: VenueStatus;
+  limit?: number;
+  offset?: number;
+};
+
+export type AvailabilityParams = {
+  startsAt: string;
+  endsAt: string;
+  capacity?: number;
+  location?: string;
+  facilityId?: string;
+  limit?: number;
+  offset?: number;
+};

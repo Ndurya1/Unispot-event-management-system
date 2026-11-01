@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import and_, exists, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
 from app.models.booking import BookingSource
@@ -44,8 +45,7 @@ async def create_venue(
     except IntegrityError as error:
         await session.rollback()
         raise ValueError("Venue name or code already exists") from error
-    await session.refresh(venue)
-    return venue
+    return (await get_venue(session, venue.id)) or venue
 
 
 async def list_venues(
@@ -66,7 +66,12 @@ async def list_venues(
     if status is not None:
         conditions.append(Venue.status == status)
     statement = (
-        select(Venue).where(and_(*conditions)).order_by(Venue.name).limit(limit).offset(offset)
+        select(Venue)
+        .options(selectinload(Venue.facilities).selectinload(VenueFacility.facility))
+        .where(and_(*conditions))
+        .order_by(Venue.name)
+        .limit(limit)
+        .offset(offset)
     )
     if facility_id is not None:
         statement = statement.join(VenueFacility).where(VenueFacility.facility_id == facility_id)
@@ -75,7 +80,12 @@ async def list_venues(
 
 
 async def get_venue(session: AsyncSession, venue_id: UUID) -> Venue | None:
-    return await session.get(Venue, venue_id)
+    result = await session.execute(
+        select(Venue)
+        .options(selectinload(Venue.facilities).selectinload(VenueFacility.facility))
+        .where(Venue.id == venue_id)
+    )
+    return result.scalar_one_or_none()
 
 
 async def update_venue(
@@ -101,8 +111,7 @@ async def update_venue(
     except IntegrityError as error:
         await session.rollback()
         raise ValueError("Venue name or code already exists") from error
-    await session.refresh(venue)
-    return venue
+    return (await get_venue(session, venue.id)) or venue
 
 
 async def create_facility(
@@ -388,7 +397,12 @@ async def find_available_venues(
     if location:
         conditions.append(Venue.location.ilike(f"%{location}%"))
     statement = (
-        select(Venue).where(and_(*conditions)).order_by(Venue.name).offset(offset).limit(limit)
+        select(Venue)
+        .options(selectinload(Venue.facilities).selectinload(VenueFacility.facility))
+        .where(and_(*conditions))
+        .order_by(Venue.name)
+        .offset(offset)
+        .limit(limit)
     )
     if facility_id is not None:
         statement = statement.join(VenueFacility).where(VenueFacility.facility_id == facility_id)

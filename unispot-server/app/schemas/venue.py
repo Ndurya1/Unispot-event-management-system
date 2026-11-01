@@ -1,4 +1,5 @@
 from datetime import datetime, time
+from typing import Any, cast
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -12,6 +13,8 @@ class VenueCreate(BaseModel):
     location: str = Field(min_length=1, max_length=255)
     capacity: int = Field(gt=0)
     description: str | None = None
+    venue_type: str = Field(default="OTHER", min_length=1, max_length=80)
+    image_url: str | None = Field(default=None, max_length=500)
     status: VenueStatus = VenueStatus.ACTIVE
     timezone: str = "Africa/Nairobi"
     booking_buffer_minutes: int = Field(default=0, ge=0)
@@ -23,12 +26,53 @@ class VenueUpdate(BaseModel):
     location: str | None = Field(default=None, min_length=1, max_length=255)
     capacity: int | None = Field(default=None, gt=0)
     description: str | None = None
+    venue_type: str | None = Field(default=None, min_length=1, max_length=80)
+    image_url: str | None = Field(default=None, max_length=500)
     status: VenueStatus | None = None
     timezone: str | None = None
     booking_buffer_minutes: int | None = Field(default=None, ge=0)
 
 
-class VenueResponse(BaseModel):
+class FacilitySummary(BaseModel):
+    id: UUID
+    name: str
+
+
+class VenueMetadataResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    venue_type: str
+    image_url: str | None
+    facilities: list[FacilitySummary] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def flatten_facilities(cls, value: object) -> object:
+        if not hasattr(value, "facilities"):
+            return value
+        venue = cast(Any, value)
+        facilities = []
+        for link in venue.facilities:
+            facility = getattr(link, "facility", None)
+            if facility is not None:
+                facilities.append({"id": facility.id, "name": facility.name})
+        return {
+            "id": venue.id,
+            "name": venue.name,
+            "code": venue.code,
+            "location": venue.location,
+            "capacity": venue.capacity,
+            "description": venue.description,
+            "status": venue.status,
+            "timezone": venue.timezone,
+            "booking_buffer_minutes": venue.booking_buffer_minutes,
+            "venue_type": venue.venue_type,
+            "image_url": venue.image_url,
+            "facilities": facilities,
+        }
+
+
+class VenueResponse(VenueMetadataResponse):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID

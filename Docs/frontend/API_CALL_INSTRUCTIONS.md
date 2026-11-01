@@ -240,6 +240,14 @@ const availability = new URLSearchParams({
 const { data: freeVenues } = await apiFetch(`/availability?${availability}`);
 ```
 
+Venue responses include the presentation metadata needed by the discovery UI:
+`venue_type`, nullable `image_url`, and `facilities` as nested `{ id, name }`
+objects. `GET /venues` and `GET /venues/{venue_id}` are public; availability
+searches require the authenticated user's bearer token and return the same
+venue metadata shape. Development can load the sample catalog with
+`uv run python -m app.db.seed_venue_catalog` from `unispot-server` after
+migrations have been applied.
+
 Venue administrators use the protected venue/facility/block management routes.
 The frontend must hide those controls unless the authenticated user has the
 appropriate role, but the backend remains the final authorization check.
