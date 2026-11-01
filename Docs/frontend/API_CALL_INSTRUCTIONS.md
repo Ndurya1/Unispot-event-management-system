@@ -359,6 +359,12 @@ Do not put `tool_calls` in a confirmation request. A changed non-confirmation
 message invalidates the previous proposal. A repeated exact confirmation is safe
 to retry and will not create a duplicate booking.
 
+Treat a write tool result with `status === "succeeded"` and a non-null
+`booking_id` as the authoritative completion signal. Refresh personal bookings
+and notification counts after that response; do not infer success from the
+assistant's prose alone. A failed or expired confirmation should clear the local
+pending action and let the user submit a new request.
+
 Allowed tool names are:
 
 ```text
