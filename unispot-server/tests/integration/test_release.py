@@ -715,7 +715,13 @@ async def test_http_login_booking_audit_admin_and_cancellation(
         assert (await client.get("/admin/metrics")).status_code == 200
         analytics = await client.get("/admin/analytics/bookings")
         assert analytics.status_code == 200
-        assert analytics.json()["total_bookings"] == 1
+        analytics_payload = analytics.json()
+        assert analytics_payload["total_bookings"] >= 1
+        venue_usage = next(
+            row for row in analytics_payload["venue_usage"] if row["venue_id"] == str(data.venue_id)
+        )
+        assert venue_usage["booking_count"] == 1
+        assert venue_usage["expected_attendance"] == data.expected_attendance
         announcement = await client.post(
             "/admin/notifications",
             json={
