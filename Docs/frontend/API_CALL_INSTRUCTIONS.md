@@ -110,6 +110,21 @@ saveTokens({
 Registration does not create an organization or organizer membership. A user
 must be assigned to an organization before booking.
 
+### Current user
+
+Authenticated clients can call `GET /auth/me` to restore the session and obtain
+the safe profile, assigned roles, and active organization memberships needed for
+navigation and booking selection:
+
+```js
+const { data: currentUser } = await apiFetch("/auth/me");
+// currentUser.roles: string[]
+// currentUser.organizations: [{ id, organization_id, name, slug, membership_role }]
+```
+
+The response does not include credentials or password data. Account registration
+does not grant roles or memberships; those remain administrator-controlled.
+
 ### Login
 
 `POST /auth/login` expects an email and password and returns both tokens. Clients
