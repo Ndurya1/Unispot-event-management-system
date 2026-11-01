@@ -375,6 +375,20 @@ The assistant must never receive or send raw SQL, database credentials,
 Treat tool results as authoritative; model-style prose is not proof that a booking
 was created.
 
+## Personal notifications
+
+Use the authenticated user's notification routes for the Notifications page and
+shell unread badge:
+
+```text
+GET  /notifications/me?limit=100&offset=0
+POST /notifications/{notification_id}/read
+```
+
+Treat `delivery_status === "READ"` or a non-null `read_at` as read. Mark-all
+actions should call the read endpoint for each unread notification because the
+backend intentionally exposes an individual ownership-checked operation.
+
 ## Administrative calls
 
 Use role-protected routes only for the relevant dashboards:

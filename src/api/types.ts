@@ -162,3 +162,20 @@ export type AssistantMessageResponse = {
   pending_confirmation: boolean;
   state: Record<string, unknown>;
 };
+
+export type NotificationType = 'CONFIRMED' | 'CANCELLED' | 'REMINDER' | 'VENUE_CHANGE';
+
+export type NotificationDeliveryStatus = 'PENDING' | 'SENT' | 'FAILED' | 'READ';
+
+export type ApiNotification = {
+  id: string;
+  booking_id: string | null;
+  type: NotificationType;
+  channel: 'IN_APP' | 'EMAIL' | 'SMS';
+  title: string;
+  body: string;
+  delivery_status: NotificationDeliveryStatus;
+  created_at: string;
+  sent_at: string | null;
+  read_at: string | null;
+};
