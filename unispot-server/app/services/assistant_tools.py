@@ -193,6 +193,8 @@ def _booking_summary(booking: Booking) -> dict[str, object]:
     return {
         "id": str(booking.id),
         "venue_id": str(booking.venue_id),
+        "venue_name": booking.venue_name,
+        "venue_location": booking.venue_location,
         "organization_id": str(booking.organization_id),
         "event_name": booking.event_name,
         "expected_attendance": booking.expected_attendance,

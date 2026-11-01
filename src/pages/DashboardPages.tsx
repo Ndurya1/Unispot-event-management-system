@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Activity,
   ArrowRight,
@@ -18,7 +18,10 @@ import {
   Users,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { events, sampleBookings } from '../data/mock';
+import { events } from '../data/mock';
+import { ApiError } from '../api/client';
+import { cancelBooking, listMyBookings } from '../api/bookings';
+import type { ApiBooking } from '../api/types';
 
 type DashboardLink = { to: string; label: string; icon: typeof CalendarDays };
 
@@ -89,7 +92,73 @@ function MetricCard({ label, value, icon: Icon, tone }: { label: string; value: 
   );
 }
 
+function formatBookingDate(value: string) {
+  return new Intl.DateTimeFormat('en-KE', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Africa/Nairobi',
+  }).format(new Date(value));
+}
+
+function useMyBookings() {
+  const [bookings, setBookings] = useState<ApiBooking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      setBookings(await listMyBookings());
+      setError('');
+    } catch (requestError) {
+      setError(requestError instanceof ApiError ? requestError.message : 'Bookings could not be loaded.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+  const cancel = async (booking: ApiBooking) => {
+    if (!window.confirm(`Cancel the booking for ${booking.event_name}?`)) return;
+    setCancellingId(booking.id);
+    try {
+      await cancelBooking(booking.id, 'Cancelled by the requester');
+      await load();
+    } catch (requestError) {
+      setError(requestError instanceof ApiError ? requestError.message : 'The booking could not be cancelled.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+  return { bookings, isLoading, error, cancellingId, cancel };
+}
+
+function BookingPanel({
+  bookings,
+  isLoading,
+  error,
+  cancellingId,
+  onCancel,
+}: {
+  bookings: ApiBooking[];
+  isLoading: boolean;
+  error: string;
+  cancellingId: string | null;
+  onCancel: (booking: ApiBooking) => Promise<void>;
+}) {
+  if (isLoading) return <p className="form-status">Loading your bookings…</p>;
+  if (error) return <p className="form-error" role="alert">{error}</p>;
+  if (bookings.length === 0) return <div className="empty-state"><h3>No bookings yet</h3><p>Book a venue to see it here.</p></div>;
+  return <div className="booking-list">{bookings.map((booking) => <article className="dashboard-booking-row" key={booking.id}>
+    <span className="booking-thumb"><CalendarCheck size={18} /></span>
+    <div className="booking-row-main"><strong>{booking.venue_name}</strong><span>{formatBookingDate(booking.starts_at)} – {formatBookingDate(booking.ends_at)}</span><small>{booking.event_name} · {booking.expected_attendance} attendees</small></div>
+    <span className={`status-pill status-pill--${booking.status.toLowerCase()}`}>{booking.status}</span>
+    {booking.status === 'CONFIRMED' && <button className="text-button" type="button" disabled={cancellingId === booking.id} onClick={() => void onCancel(booking)}>{cancellingId === booking.id ? 'Cancelling…' : 'Cancel'}</button>}
+    <Link to={`/venues/${booking.venue_id}`} className="row-chevron" aria-label={`View ${booking.venue_name}`}><ChevronRight size={17} /></Link>
+  </article>)}</div>;
+}
+
 export function StudentDashboardPage() {
+  const bookingData = useMyBookings();
   return (
     <div className="page-wrap page-wrap--wide dashboard-page">
       <DashboardShell>
@@ -98,22 +167,13 @@ export function StudentDashboardPage() {
           <Link className="button button--soft" to="/events">Explore events <ArrowRight size={15} /></Link>
         </div>
         <div className="metric-grid">
-          <MetricCard label="Upcoming bookings" value="2" icon={CalendarCheck} tone="blue" />
+          <MetricCard label="Bookings" value={String(bookingData.bookings.length)} icon={CalendarCheck} tone="blue" />
           <MetricCard label="Registered events" value="3" icon={CalendarDays} tone="purple" />
           <MetricCard label="Notifications" value="1" icon={Bell} tone="peach" />
         </div>
         <section className="dashboard-panel" id="bookings">
           <div className="panel-heading"><div><h2>Upcoming bookings</h2><p>Your next campus spaces.</p></div><Link className="text-link" to="/venues">Find a venue <ArrowRight size={15} /></Link></div>
-          <div className="booking-list">
-            {sampleBookings.map((booking, index) => (
-              <article className="dashboard-booking-row" key={booking.venue}>
-                <span className="booking-thumb"><img src={index === 0 ? '/assets/venue-great-hall.jpeg' : '/assets/event-innovation.jpg'} alt="" /></span>
-                <div className="booking-row-main"><strong>{booking.venue}</strong><span>{booking.date} · {booking.time}</span></div>
-                <span className={`status-pill status-pill--${booking.status.toLowerCase()}`}>{booking.status}</span>
-                <Link to={`/venues/${index === 0 ? 'great-hall' : 'seminar-room-b'}`} className="row-chevron" aria-label={`View ${booking.venue}`}><ChevronRight size={17} /></Link>
-              </article>
-            ))}
-          </div>
+          <BookingPanel bookings={bookingData.bookings} isLoading={bookingData.isLoading} error={bookingData.error} cancellingId={bookingData.cancellingId} onCancel={bookingData.cancel} />
         </section>
         <section className="dashboard-panel" id="my-events">
           <div className="panel-heading"><div><h2>My events</h2><p>Plans you’ve saved for the semester.</p></div><Link className="text-link" to="/events">Browse all <ArrowRight size={15} /></Link></div>
@@ -151,6 +211,7 @@ type EventDraft = { title: string; date: string; location: string; category: str
 const emptyEventDraft: EventDraft = { title: '', date: '', location: 'Main Campus', category: 'Workshop', description: '' };
 
 export function OrganizerDashboardPage() {
+  const bookingData = useMyBookings();
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [draft, setDraft] = useState<EventDraft>(emptyEventDraft);
   const [draftMessage, setDraftMessage] = useState('');
@@ -217,15 +278,7 @@ export function OrganizerDashboardPage() {
         </section>
         <section className="dashboard-panel" id="bookings">
           <div className="panel-heading"><div><h2>Venue bookings</h2><p>Spaces requested for your organization.</p></div><Link className="text-link" to="/venues">Find a venue <ArrowRight size={15} /></Link></div>
-          <div className="booking-list">
-            {sampleBookings.map((booking, index) => (
-              <article className="dashboard-booking-row" key={booking.venue}>
-                <span className="booking-thumb"><img src={index === 0 ? '/assets/venue-great-hall.jpeg' : '/assets/event-innovation.jpg'} alt="" /></span>
-                <div className="booking-row-main"><strong>{booking.venue}</strong><span>{booking.date} · {booking.time}</span></div>
-                <span className={`status-pill status-pill--${booking.status.toLowerCase()}`}>{booking.status}</span>
-              </article>
-            ))}
-          </div>
+          <BookingPanel bookings={bookingData.bookings} isLoading={bookingData.isLoading} error={bookingData.error} cancellingId={bookingData.cancellingId} onCancel={bookingData.cancel} />
         </section>
         <section className="dashboard-panel" id="announcements">
           <div className="panel-heading"><div><h2>Announcements</h2><p>Updates for your campus community.</p></div><Megaphone size={18} aria-hidden="true" /></div>

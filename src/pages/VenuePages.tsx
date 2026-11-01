@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, MapPin, Users } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { venues, type CampusVenue } from '../data/mock';
 import { getVenue } from '../api/venues';
-import type { ApiVenue } from '../api/types';
+import { ApiError } from '../api/client';
+import { createBooking } from '../api/bookings';
+import type { ApiBooking, ApiVenue } from '../api/types';
+import { useAuth } from '../auth/AuthProvider';
 
 export function VenueListPage() {
   const [capacity, setCapacity] = useState('Any capacity');
@@ -102,12 +105,26 @@ export function VenueDetailsPage() {
   );
 }
 
-type BookingFormState = { eventName: string; date: string; startTime: string; endTime: string; attendance: string; purpose: string; additional: string };
+type BookingFormState = { eventName: string; date: string; startTime: string; endTime: string; attendance: string; purpose: string; additional: string; organizationId: string };
 
 function timeToMinutes(value: string) {
-  const [clock, period] = value.split(' ');
-  const [hours, minutes] = clock.split(':').map(Number);
-  return ((hours % 12) + (period === 'PM' ? 12 : 0)) * 60 + minutes;
+  const [hours, minutes] = to24HourTime(value).split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function to24HourTime(value: string) {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+  if (!match) return value;
+  let hours = Number(match[1]);
+  const minutes = match[2];
+  const period = match[3]?.toUpperCase();
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
+function toNairobiDateTime(date: string, time: string) {
+  return `${date}T${to24HourTime(time)}:00+03:00`;
 }
 
 function toBookingVenue(venue: ApiVenue, selectedSlot: string): CampusVenue {
@@ -127,6 +144,7 @@ function toBookingVenue(venue: ApiVenue, selectedSlot: string): CampusVenue {
 
 export function BookingPage() {
   const [params] = useSearchParams();
+  const { user } = useAuth();
   const bookingVenueId = params.get('venue');
   const fallbackVenue = venues.find((item) => item.id === bookingVenueId);
   const initialDate = params.get('date') ?? '';
@@ -148,7 +166,7 @@ export function BookingPage() {
   const [selectedSlot, setSelectedSlot] = useState(() => venue.available.includes(initialSlot) ? initialSlot : '');
   const [form, setForm] = useState<BookingFormState>(() => {
     const [startTime = '', endTime = ''] = venue.available.includes(initialSlot) ? initialSlot.split(' – ') : [];
-    return { eventName: '', date: initialDate, startTime, endTime, attendance: '', purpose: '', additional: '' };
+    return { eventName: '', date: initialDate, startTime, endTime, attendance: '', purpose: '', additional: '', organizationId: '' };
   });
   useEffect(() => {
     if (!apiVenue || !initialSlot) return;
@@ -159,16 +177,30 @@ export function BookingPage() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState<ApiBooking | null>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const navigate = useNavigate();
-  const update = (key: keyof BookingFormState, value: string) => setForm((current) => ({ ...current, [key]: value }));
+  const organizations = user?.organizations ?? [];
+  useEffect(() => {
+    if (!form.organizationId && organizations.length > 0) {
+      setForm((current) => ({ ...current, organizationId: organizations[0].organization_id }));
+    }
+  }, [form.organizationId, organizations]);
+  const update = (key: keyof BookingFormState, value: string) => {
+    idempotencyKeyRef.current = null;
+    setForm((current) => ({ ...current, [key]: value }));
+  };
   const startTimes = Array.from(new Set(venue.available.map((slot) => slot.split(' – ')[0])));
   const endTimes = Array.from(new Set(venue.available.map((slot) => slot.split(' – ')[1])));
   const chooseSlot = (slot: string) => {
+    idempotencyKeyRef.current = null;
     const [startTime = '', endTime = ''] = slot.split(' – ');
     setSelectedSlot(slot);
     setForm((current) => ({ ...current, startTime, endTime }));
   };
   const updateTime = (key: 'startTime' | 'endTime', value: string) => {
+    idempotencyKeyRef.current = null;
     const nextForm = { ...form, [key]: value };
     setForm((current) => ({ ...current, [key]: value }));
     const matchedSlot = venue.available.find((slot) => slot === `${nextForm.startTime} – ${nextForm.endTime}`);
@@ -177,6 +209,38 @@ export function BookingPage() {
 
   if (apiVenueId && !apiVenue && !venueError) return <div className="page-wrap"><div className="empty-state"><h2>Loading booking venue…</h2></div></div>;
   if (venueError) return <div className="page-wrap"><div className="empty-state"><h2>Venue unavailable</h2><p>{venueError}</p><Link className="button button--primary" to="/venues">Browse venues</Link></div></div>;
+
+  const submitBooking = async () => {
+    setError('');
+    if (!apiVenue) {
+      setError('Choose a venue from the live venue catalog before submitting.');
+      return;
+    }
+    if (!form.organizationId) {
+      setError('Select an organization before submitting the booking.');
+      return;
+    }
+    setSubmitting(true);
+    const idempotencyKey = idempotencyKeyRef.current ?? crypto.randomUUID();
+    idempotencyKeyRef.current = idempotencyKey;
+    try {
+      const booking = await createBooking({
+        venue_id: apiVenue.id,
+        organization_id: form.organizationId,
+        event_name: form.eventName.trim(),
+        event_description: [form.purpose, form.additional.trim()].filter(Boolean).join('\n\n') || undefined,
+        expected_attendance: Number(form.attendance),
+        starts_at: toNairobiDateTime(form.date, form.startTime),
+        ends_at: toNairobiDateTime(form.date, form.endTime),
+      }, idempotencyKey);
+      setCreatedBooking(booking);
+      setSubmitted(true);
+    } catch (requestError) {
+      setError(requestError instanceof ApiError ? requestError.message : 'The booking could not be submitted.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const continueStep = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -201,7 +265,7 @@ export function BookingPage() {
     setStep((current) => Math.min(3, current + 1));
   };
 
-  if (submitted) return <div className="page-wrap booking-page"><div className="booking-success"><span className="success-mark"><Check size={30} /></span><span className="eyebrow">DEMO COMPLETE</span><h1>Your booking draft is ready.</h1><p>This frontend demo has not submitted or reserved a real venue. Your details are only shown in this temporary preview.</p><div className="success-summary"><strong>{form.eventName}</strong><span>{venue.name} · {form.date}</span><span>{form.startTime} – {form.endTime}</span></div><div className="success-actions"><Link className="button button--primary" to="/student/dashboard">View dashboard</Link><Link className="button button--outline" to="/venues">Find another venue</Link></div></div></div>;
+  if (submitted) return <div className="page-wrap booking-page"><div className="booking-success"><span className="success-mark"><Check size={30} /></span><span className="eyebrow">BOOKING CONFIRMED</span><h1>Your venue is booked.</h1><p>Your booking was submitted successfully and the venue has been reserved under the backend booking rules.</p><div className="success-summary"><strong>{form.eventName}</strong><span>{venue.name} · {form.date}</span><span>{form.startTime} – {form.endTime}</span>{createdBooking && <span>Confirmation code: {createdBooking.confirmation_code}</span>}</div><div className="success-actions"><Link className="button button--primary" to="/student/dashboard#bookings">View my bookings</Link><Link className="button button--outline" to="/venues">Find another venue</Link></div></div></div>;
 
   return (
     <div className="page-wrap booking-page">
@@ -210,10 +274,10 @@ export function BookingPage() {
         <div className="booking-steps" aria-label="Booking steps">{[['1','Details'],['2','Attendees'],['3','Review']].map(([number, label]) => <div className={step >= Number(number) ? 'booking-step booking-step--active' : 'booking-step'} key={number}><span>{step > Number(number) ? <Check size={14} /> : number}</span><strong>{label}</strong></div>)}</div>
         <form onSubmit={continueStep} noValidate>
           {step === 1 && <div className="booking-form-section"><div className="form-section-heading"><span className="eyebrow">STEP 1 OF 3</span><h2>Tell us about your event</h2><p>Start with the essentials.</p></div><div className="form-grid"><div className="form-field form-field--full"><label htmlFor="booking-event-name">Event name</label><input id="booking-event-name" required value={form.eventName} onChange={(event) => update('eventName', event.target.value)} placeholder="e.g. Student Innovation Night" /></div><div className="form-field form-field--full"><label htmlFor="booking-date">Event date</label><input id="booking-date" type="date" required value={form.date} onChange={(event) => update('date', event.target.value)} /></div><div className="form-field form-field--full"><label htmlFor="booking-slot">Available time slot</label><select id="booking-slot" value={selectedSlot} onChange={(event) => chooseSlot(event.target.value)}><option value="">Choose an available slot</option>{venue.available.map((slot) => <option key={slot} value={slot}>{slot}</option>)}</select></div><div className="form-field"><label htmlFor="booking-start">Start time</label><select id="booking-start" value={form.startTime} onChange={(event) => updateTime('startTime', event.target.value)}><option value="">Select time</option>{startTimes.map((time) => <option key={time}>{time}</option>)}</select></div><div className="form-field"><label htmlFor="booking-end">End time</label><select id="booking-end" value={form.endTime} onChange={(event) => updateTime('endTime', event.target.value)}><option value="">Select time</option>{endTimes.map((time) => <option key={time}>{time}</option>)}</select></div></div></div>}
-          {step === 2 && <div className="booking-form-section"><div className="form-section-heading"><span className="eyebrow">STEP 2 OF 3</span><h2>Plan for your attendees</h2><p>Help us understand the kind of gathering you have in mind.</p></div><div className="form-grid"><div className="form-field"><label htmlFor="booking-attendance">Expected attendance</label><input id="booking-attendance" type="number" min="1" max={venue.capacity} value={form.attendance} onChange={(event) => update('attendance', event.target.value)} placeholder={`Up to ${venue.capacity}`} /></div><div className="form-field"><label htmlFor="booking-purpose">Purpose of booking</label><select id="booking-purpose" value={form.purpose} onChange={(event) => update('purpose', event.target.value)}><option value="">Select purpose</option><option>Workshop</option><option>Club meeting</option><option>Conference</option><option>Social event</option><option>Other campus event</option></select></div><div className="form-field form-field--full"><label htmlFor="booking-notes">Additional information <span className="muted">(optional)</span></label><textarea id="booking-notes" rows={4} value={form.additional} onChange={(event) => update('additional', event.target.value)} placeholder="Share any setup or accessibility notes." /></div></div></div>}
-          {step === 3 && <div className="booking-form-section"><div className="form-section-heading"><span className="eyebrow">STEP 3 OF 3</span><h2>Review your booking draft</h2><p>Check your details. You decide whether to confirm this mock request.</p></div><div className="review-card"><div><span>Event name</span><strong>{form.eventName}</strong></div><div><span>Venue</span><strong>{venue.name} · {venue.location}</strong></div><div><span>Date and time</span><strong>{form.date} · {form.startTime} – {form.endTime}</strong></div><div><span>Attendance</span><strong>{form.attendance} people</strong></div><div><span>Purpose</span><strong>{form.purpose}</strong></div>{form.additional && <div><span>Additional information</span><strong>{form.additional}</strong></div>}</div><p className="demo-notice"><span>i</span>This action only completes a local frontend demo; it does not contact the university or reserve the venue.</p></div>}
+          {step === 2 && <div className="booking-form-section"><div className="form-section-heading"><span className="eyebrow">STEP 2 OF 3</span><h2>Plan for your attendees</h2><p>Help us understand the kind of gathering you have in mind.</p></div><div className="form-grid"><div className="form-field"><label htmlFor="booking-attendance">Expected attendance</label><input id="booking-attendance" type="number" min="1" max={venue.capacity} value={form.attendance} onChange={(event) => update('attendance', event.target.value)} placeholder={`Up to ${venue.capacity}`} /></div><div className="form-field"><label htmlFor="booking-organization">Booking organization</label><select id="booking-organization" value={form.organizationId} onChange={(event) => update('organizationId', event.target.value)}><option value="">Select organization</option>{organizations.map((organization) => <option value={organization.organization_id} key={organization.organization_id}>{organization.name}</option>)}</select></div><div className="form-field"><label htmlFor="booking-purpose">Purpose of booking</label><select id="booking-purpose" value={form.purpose} onChange={(event) => update('purpose', event.target.value)}><option value="">Select purpose</option><option>Workshop</option><option>Club meeting</option><option>Conference</option><option>Social event</option><option>Other campus event</option></select></div><div className="form-field form-field--full"><label htmlFor="booking-notes">Additional information <span className="muted">(optional)</span></label><textarea id="booking-notes" rows={4} value={form.additional} onChange={(event) => update('additional', event.target.value)} placeholder="Share any setup or accessibility notes." /></div></div>{organizations.length === 0 && <p className="form-error" role="alert">Your account has no active organization membership for booking.</p>}</div>}
+          {step === 3 && <div className="booking-form-section"><div className="form-section-heading"><span className="eyebrow">STEP 3 OF 3</span><h2>Review your booking</h2><p>Check your details before submitting the booking.</p></div><div className="review-card"><div><span>Event name</span><strong>{form.eventName}</strong></div><div><span>Venue</span><strong>{venue.name} · {venue.location}</strong></div><div><span>Date and time</span><strong>{form.date} · {form.startTime} – {form.endTime}</strong></div><div><span>Attendance</span><strong>{form.attendance} people</strong></div><div><span>Organization</span><strong>{organizations.find((organization) => organization.organization_id === form.organizationId)?.name || 'Not selected'}</strong></div><div><span>Purpose</span><strong>{form.purpose}</strong></div>{form.additional && <div><span>Additional information</span><strong>{form.additional}</strong></div>}</div></div>}
           {error && <p className="form-error" role="alert">{error}</p>}
-          <div className="booking-form-actions">{step > 1 ? <button type="button" className="button button--outline" onClick={() => { setError(''); setStep((current) => current - 1); }}>Back</button> : <button type="button" className="button button--outline" onClick={() => navigate(`/venues/${venue.id}`)}>Cancel</button>}{step < 3 ? <button className="button button--primary" type="submit">Continue <ArrowRight size={16} /></button> : <button className="button button--primary" type="button" onClick={() => setSubmitted(true)}>Confirm mock booking <Check size={16} /></button>}</div>
+          <div className="booking-form-actions">{step > 1 ? <button type="button" className="button button--outline" onClick={() => { setError(''); setStep((current) => current - 1); }}>Back</button> : <button type="button" className="button button--outline" onClick={() => navigate(`/venues/${venue.id}`)}>Cancel</button>}{step < 3 ? <button className="button button--primary" type="submit">Continue <ArrowRight size={16} /></button> : <button className="button button--primary" type="button" onClick={submitBooking} disabled={submitting}>{submitting ? 'Submitting…' : 'Confirm booking'} <Check size={16} /></button>}</div>
         </form>
       </div>
       <div className="booking-footnote"><CalendarDays size={17} /><span><strong>{venue.name}</strong><br />Capacity {venue.capacity} · {venue.location}</span><span className="footnote-slot"><Clock3 size={15} />{selectedSlot || 'Select a time'}</span></div>

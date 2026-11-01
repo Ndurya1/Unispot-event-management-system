@@ -252,6 +252,13 @@ Venue administrators use the protected venue/facility/block management routes.
 The frontend must hide those controls unless the authenticated user has the
 appropriate role, but the backend remains the final authorization check.
 
+Booking responses include `venue_name` and `venue_location` for dashboard
+rendering. The frontend should use the current user's organization memberships
+from `GET /auth/me` for the `organization_id` field and must send
+timezone-aware `starts_at` and `ends_at` values. Generate one
+`Idempotency-Key` per create or cancel intent and reuse it if the same request
+is retried.
+
 ## Booking creation and cancellation
 
 Booking writes require a unique `Idempotency-Key`. Generate it once per user

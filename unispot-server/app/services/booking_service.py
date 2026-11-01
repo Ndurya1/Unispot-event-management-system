@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.observability import metrics
 from app.models.audit_event import ActorType, AuditEvent, AuditOutcome
@@ -81,7 +82,11 @@ async def create_booking(
                 booking_id = _booking_id_from_response(existing.response_body)
                 if booking_id is None:
                     raise IdempotencyConflictError("The idempotency key has no replayable result")
-                booking = await session.get(Booking, booking_id)
+                booking = await session.scalar(
+                    select(Booking)
+                    .options(selectinload(Booking.venue))
+                    .where(Booking.id == booking_id)
+                )
                 if booking is None:
                     raise IdempotencyConflictError("The original booking no longer exists")
                 metrics.add("booking_replays_total")
@@ -114,6 +119,7 @@ async def create_booking(
 
             booking = Booking(
                 venue_id=venue.id,
+                venue=venue,
                 requester_id=requester.id,
                 organization_id=data.organization_id,
                 reservation_id=reservation.id,

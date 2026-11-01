@@ -29,6 +29,8 @@ class BookingResponse(BaseModel):
 
     id: UUID
     venue_id: UUID
+    venue_name: str
+    venue_location: str
     requester_id: UUID
     organization_id: UUID
     event_name: str
