@@ -35,3 +35,59 @@
 - [x] Build Admin Notifications Management with recipient targeting and a message-preview/send-demo action; retain read-only/receive-only Notifications for users. Build Admin Waitlist & Recurring Booking Management to monitor queues and recurring requests while keeping student join/leave and queue status on the user site; demonstrate all changes locally only.
 - [x] Build read-only Audit Logs and configurable System Settings screens, plus admin search across users/events/venues. Do not fabricate a real audit trail, role security, or persisted settings; make the missing backend boundary visible.
 - [x] Keep existing and new page routes synchronized in `public/manus-routes.json`; test desktop/mobile navigation, search, local admin forms/actions, the student My Waitlists route, and the no-booking-approval invariant. Preserve labels, visible focus, semantic tables/forms, keyboard access, and reduced-motion support.
+
+## Frontend-backend API integration
+
+These related tasks cover moving supported screens from the completed frontend prototype to live APIs. IDs below are local planning references, not published issue numbers. Use `Docs/frontend/API_CALL_INSTRUCTIONS.md` and the backend routes/schemas as the contract.
+
+First milestone: a user with an active organizer membership can log in, find a venue, create a booking, see it after reload, and cancel it under the backend's rules.
+
+- [ ] INT-01: Define integration scope and resolve API/UI contract gaps
+
+  Map screens to existing endpoints and document field mismatches, including venue images/facilities, availability intervals, and signup account choices. Record missing APIs for events/RSVPs, QR tickets, providers, equipment, certificates, waitlists/recurrence, password reset, public organizations, and unsupported admin functions as follow-up backend work.
+  Done when each screen is classified as ready to integrate, requiring a backend addition, or remaining an explicit demo/unavailable feature. Depends on: none.
+
+- [ ] INT-02: Expose current-user context and eligible organizations
+
+  Add authenticated read endpoints for the current user's profile, assigned roles, and active organizer memberships with organization details. Preserve administrative control of roles and memberships; registration must not grant them.
+  Done when the frontend can determine navigation permissions and populate a booking organization selector, including the no-membership state; add authorization coverage and update the API guide. Depends on: INT-01.
+
+- [ ] INT-03: Build the shared typed API client
+
+  Add configurable API origin, typed feature modules, bearer headers, common error parsing, request IDs, rate-limit handling, and bounded pagination. Verify development CORS and document local configuration using native fetch and existing dependencies.
+  Done when feature modules share one request/error contract and correctly handle JSON, empty responses, and network failures. Depends on: INT-01.
+
+- [ ] INT-04: Connect authentication and protected navigation
+
+  Wire registration, login, session restoration, logout, and current-user loading. Define token persistence and Remember me behavior; coordinate one refresh-and-retry attempt and clear expired sessions. Align signup fields with the backend and protect private/admin routes using server-provided roles.
+  Done when sessions behave correctly across reloads, failed refresh returns the user to login, and forbidden access does not trigger refresh. Depends on: INT-02, INT-03.
+
+- [ ] INT-05: Connect venue discovery and availability
+
+  Replace venue mocks with list/detail requests, real UUID links, supported filters, and pagination. Replace fixed mock slots with an interval-based availability flow and handle missing presentation fields without inventing operational data.
+  Done when venue selection and availability reflect API responses and show loading, empty, error, and not-found states. Depends on: INT-03, INT-04.
+
+- [ ] INT-06: Connect booking creation, My Bookings, and cancellation
+
+  Add eligible-organization selection, timezone-aware payloads, explicit confirmation, and stable idempotency keys reused for retries. Connect personal booking lists/details and cancellation; refresh affected data after successful writes. Render backend policy/conflict errors and preserve automatic booking allocation without an approval queue.
+  Done when a booking persists after reload, duplicate submissions do not create duplicates, and permitted cancellation updates the booking and releases availability. Depends on: INT-02, INT-04, INT-05.
+
+- [ ] INT-07: Connect personal notifications and booking dashboard data
+
+  Replace personal notification mocks with list/read requests and refresh unread counts. Populate booking-related dashboard sections from real bookings; keep unsupported event statistics and preferences clearly identified.
+  Done when notification read state persists and booking summaries match the current user's records. Depends on: INT-04, INT-06.
+
+- [ ] INT-08: Connect supported administration screens
+
+  Integrate available venue/facility/operating-hours/block operations, organization management, allocation monitoring, and audit logs with appropriate role restrictions. Track missing user-list and other admin contracts before wiring dependent controls; do not use operational metrics as business analytics.
+  Done when supported actions persist, forbidden actions are handled, and unsupported controls cannot claim successful writes. Depends on: INT-01, INT-04, INT-05.
+
+- [ ] INT-09: Connect the in-app assistant
+
+  Replace scripted chat replies with the assistant API, retain conversation state, and render server proposals before booking/cancellation confirmation. Confirm using the saved conversation and server-issued confirmation ID without resending tool arguments; account for the current rule-based provider's limits.
+  Done when confirmed actions update booking data, failures are visible, and repeated confirmation cannot duplicate a booking. Depends on: INT-04, INT-06.
+
+- [ ] INT-10: Verify integrated journeys and update project documentation
+
+  Run frontend typecheck/build, relevant backend tests, and browser journeys against a development database. Cover session expiry, permissions, no eligible organization, conflicts, duplicate submission, cancellation, reload persistence, and service failures. Update setup instructions and prototype claims to match the integrated features.
+  Done when the first milestone and supported notifications/admin/assistant flows are verified, with remaining backend gaps and environment requirements documented. Depends on: INT-06, INT-07, INT-08, INT-09.

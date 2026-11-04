@@ -1,7 +1,7 @@
 import { clearTokens, getAccessToken, getRefreshToken, saveAccessToken } from '../auth/storage';
 import type { ApiErrorPayload, ApiResult, TokenResponse } from './types';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
 
 export class ApiError extends Error {
   status: number;
