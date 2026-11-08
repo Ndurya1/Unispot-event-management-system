@@ -62,7 +62,7 @@ async function sendRequest<T>(path: string, options: ApiFetchOptions, includeAut
 }
 
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<ApiResult<T>> {
-  const isAuthenticationRequest = ['/auth/login', '/auth/register', '/auth/token', '/auth/refresh'].includes(path);
+  const isAuthenticationRequest = ['/auth/login', '/auth/register', '/auth/token', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/verify-email', '/auth/resend-verification'].includes(path);
   try {
     return await sendRequest<T>(path, options, !isAuthenticationRequest);
   } catch (error) {

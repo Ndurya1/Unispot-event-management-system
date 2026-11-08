@@ -22,6 +22,7 @@ def test_identity_models_match_documented_table_names() -> None:
         "created_at",
         "updated_at",
         "last_login_at",
+        "email_verified_at",
     }
     assert set(Role.__table__.columns.keys()) == {"id", "name"}
     assert set(UserRoles.__table__.columns.keys()) == {

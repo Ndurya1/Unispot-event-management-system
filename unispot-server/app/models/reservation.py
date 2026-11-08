@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 class ReservationType(StrEnum):
     BOOKING = "BOOKING"
     BLOCK = "BLOCK"
+    EVENT = "EVENT"
 
 
 class VenueReservation(Base):

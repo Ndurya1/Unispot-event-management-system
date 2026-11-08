@@ -9,6 +9,7 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "asyncpg>=0.30.0",
     "fastapi[standard]>=0.141.1",
+    "httpx>=0.28.1",
     "pydantic-settings>=2.10.1",
     "pyjwt>=2.15.1",
     "sqlalchemy[asyncio]>=2.0.43",
@@ -18,7 +19,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "mypy>=1.17.1",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",

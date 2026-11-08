@@ -1,13 +1,43 @@
-# UniSpot Frontend Outcomes
+# UniSpot Project Status
 
-- [x] Build the shared UniSpot shell and visual system: use the attached reference’s bright white/pale cool-gray surfaces, deep navy typography, violet/indigo brand accents, compact top navigation, rounded cards, restrained shadows, calendar-grid brand mark, readable hierarchy, keyboard-visible focus, and responsive navigation. Use consistent navigation for Home, Events, Venues, Organizations, My Bookings, Notifications, Profile, and Dashboard as appropriate. Implement reusable buttons, cards, filters, form fields, status badges, tabs, dialogs, and responsive layouts. Use subtle 150–200 ms interaction transitions and honor reduced-motion preferences.
-- [x] Build Home and Events discovery: Home has the “Your campus. Your events.” campus hero and search, Explore Events and Find a Venue actions, three feature cards, featured Innovation & Tech Day, Culture Fest, and Leadership Workshop, and a venue CTA. Events listing has search and event-type/date/location/organization filters, clear filters, and cards with dates, locations, organizers, attendee counts, categories, and View Details actions.
-- [x] Build event details and registration: show the event image, date/time/location/attendee count, organizer, about text, highlights, relevant tabs and share controls; provide Register Now with visible mock UI feedback. Use sample event content from the supplied UniSpot specification where useful.
-- [x] Build venue directory, details, and booking flow: venue directory supports capacity/location/facilities/availability filters; venue detail displays Great Hall/Main Campus, capacity, facilities and selected date/time availability slots; Book Now is disabled until an available slot is selected, then starts a multi-step flow with event name, date, start time, end time, expected attendance, purpose and additional information. Reject unavailable time pairs and attendance outside venue capacity before review. Follow review with explicit user confirmation before any mock completion. Provide back/cancel controls. Do not claim or submit a real booking.
-- [x] Build Organization, Student Dashboard, Organizer Dashboard, and Notifications surfaces: organizations has a usable directory/listing. Student dashboard shows booking/event/notification summaries, upcoming bookings, registered events and role navigation. Organizer dashboard shows event/registration/upcoming metrics, distinct Recent Events, Registration Overview and Upcoming Events sections, plus a local create-event draft form whose feedback makes clear the draft has not been published. Notifications show sample booking-confirmation, registration-open, processing, and new-event messages. Use the sample Great Hall, Seminar Room B, Innovation & Tech Day, and Tech Club content where useful.
-- [x] Build frontend-only Login, Signup, and Forgot Password screens: login includes UniSpot brand/tagline, email/password, Remember me, Forgot password?, Log In, and Sign Up. Signup includes full name, email, optional phone, password/confirmation, Student/Organizer/University Staff/Service Provider account choices, Terms of Service/Privacy Policy notice, and Log In link. Forgot password includes email, Send Reset Link, and Log In link. Forms are labeled and validate locally; show prototype feedback instead of authenticating or sending email.
-- [x] Build Campus Services and UniSpot Assistant: keep user-facing service cards for Event Registration & RSVP, QR Tickets & Attendance, Service Provider Directory, Equipment Reservations, and Digital Certificates; campus-wide Analytics & Reports and Waitlists & Recurring Booking Management belong to Admin. Assistant includes the sample Great Hall availability conversation and suggested replies; it may prepare a mock booking but must require explicit user confirmation before the mock completion state.
-- [x] Make all implemented surfaces usable on mobile and accessible: adapt navigation, filters, dashboards, booking flow, cards, and chat for narrow screens in the spirit of the reference’s mobile views; give content images useful alt text and decorative images empty alt text; maintain clear form labels, keyboard-operable controls, visible focus, and reduced-motion support. Keep all behavior frontend-only with local mock data and temporary client-side state—no backend, database, real authentication, real submissions, payments, or persistent integrations. Keep `public/manus-routes.json` complete and synchronized with actual routes.
+## Core Features (Backend + Frontend)
+- [x] Full-stack architecture: FastAPI + PostgreSQL backend, React + TypeScript frontend
+- [x] Authentication with JWT tokens and Argon2 password hashing
+- [x] Role-based access control (Organizer, Venue Admin, System Admin)
+- [x] Venue catalogue with search, filtering, and availability checking
+- [x] Policy-driven automatic venue booking (no admin approval queue)
+- [x] Conflict detection and prevention via PostgreSQL constraints and transactions
+- [x] Booking policy enforcement (24hr lead time, 180-day window, 12hr max duration, capacity checks, org membership, operating hours)
+- [x] My Bookings management with cancellation
+- [x] In-app notifications system
+- [x] Rule-based in-app assistant with allowlisted tools and confirmation flow
+- [x] Admin dashboard with user management, venue management, allocations view, analytics
+- [x] Venue blocks/closures for maintenance
+- [x] Audit logging for critical actions
+
+## Frontend-Only Demonstrations (No Backend Implementation)
+- [ ] Event Registration & RSVP (frontend demo only)
+- [ ] QR Tickets & Attendance (frontend demo only)
+- [ ] Service Provider Directory (frontend demo only)
+- [ ] Equipment Reservations (frontend demo only)
+- [ ] Digital Certificates (frontend demo only)
+- [ ] Waitlists & Recurring Bookings (student waitlist UI exists but full backend implementation may be partial)
+
+## Documentation & Submission Readiness
+- [x] Update README to reflect full-stack nature
+- [ ] Create booking policy documentation (current fixed criteria)
+- [ ] Document role provisioning process for local development
+- [ ] Update project report using Implementation Update Addendum
+- [ ] Capture test evidence (backend tests, linting, type checks)
+- [ ] Capture browser test evidence for core flows
+- [ ] Document scope decisions for demo features
+
+## Future Enhancements
+- [ ] Versioned/effective-dated booking policy management
+- [ ] LLM-powered assistant (Gemini adapter exists but disabled)
+- [ ] Email/SMS notifications
+- [ ] Production deployment configuration
+- [ ] Comprehensive browser/end-to-end testing
 
 ## Campus Services overview design
 

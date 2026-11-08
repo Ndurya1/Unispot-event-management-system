@@ -1,6 +1,8 @@
-# UniSpot Campus Platform — Frontend
+# UniSpot Campus Platform
 
-A responsive, frontend-only campus events and venue-booking prototype built with React, TypeScript, Vite, and React Router. It uses local mock data; authentication, event registration, provider requests, analytics export, QR scanning, equipment checks, waitlists, certificates, and venue bookings are demonstrations and do not submit real data or create records.
+A full-stack campus events and venue-booking platform built with React, TypeScript, Vite, and React Router on the frontend, and FastAPI with PostgreSQL on the backend. Venue bookings are automatically allocated based on policy (no manual admin approval queue), with conflict prevention enforced by database constraints. The platform includes role-based access control, in-app notifications, an in-app assistant, and administrative tooling. 
+
+> **Note:** Some campus service features (Event Registration, QR Tickets/Attendance, Equipment Reservations, Certificates, Waitlists, Service Provider Directory) are currently frontend demonstrations with mock data. The core venue discovery and booking flows are fully backed by the FastAPI/PostgreSQL backend.
 
 ## Run locally
 

@@ -14,6 +14,7 @@ import {
   Users,
   UsersRound,
   Wrench,
+  FileCheck,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -22,6 +23,7 @@ export type AdminSectionId =
   | 'events'
   | 'venues'
   | 'bookings'
+  | 'allocations'
   | 'organizations'
   | 'service-providers'
   | 'equipment'
@@ -32,6 +34,7 @@ export type AdminSectionId =
   | 'policies-rules'
   | 'waitlists'
   | 'audit-logs'
+  | 'certificates'
   | 'system-settings';
 
 export type AdminField = {
@@ -62,6 +65,7 @@ export const adminNavItems: { id: 'dashboard' | AdminSectionId; label: string; i
   { id: 'events', label: 'Events', icon: CalendarDays },
   { id: 'venues', label: 'Venues', icon: MapPin },
   { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
+  { id: 'allocations', label: 'Allocations', icon: ClipboardList },
   { id: 'organizations', label: 'Organizations', icon: Building2 },
   { id: 'service-providers', label: 'Service Providers', icon: UsersRound },
   { id: 'equipment', label: 'Equipment', icon: Package },
@@ -72,6 +76,7 @@ export const adminNavItems: { id: 'dashboard' | AdminSectionId; label: string; i
   { id: 'policies-rules', label: 'Policies & Rules', icon: ShieldCheck },
   { id: 'waitlists', label: 'Waitlists & Recurring', icon: ListChecks },
   { id: 'audit-logs', label: 'Audit Logs', icon: ClipboardList },
+  { id: 'certificates', label: 'Certificates', icon: FileCheck },
   { id: 'system-settings', label: 'System Settings', icon: Settings },
 ];
 
@@ -111,6 +116,10 @@ export const adminSectionData: Record<AdminSectionId, AdminSectionDefinition> = 
       { id: 'venue-5', name: 'Conference Room', capacity: '60', location: 'Admin Block', facilities: 'Video Conferencing', status: 'Active' },
     ],
   },
+  allocations: {
+    id: 'allocations', title: 'Resource Allocations', description: 'Live venue allocations from the backend.',
+    columns: [], fields: [], rows: [], canCreate: false, canEdit: false,
+  },
   bookings: {
     id: 'bookings', title: 'Booking Monitoring', description: 'Monitor outcomes generated automatically by the venue and booking rules.',
     columns: [{ key: 'id', label: 'Booking ID' }, { key: 'requester', label: 'Requester' }, { key: 'venue', label: 'Venue' }, { key: 'date', label: 'Date' }, { key: 'status', label: 'Automatic outcome' }, { key: 'rule', label: 'Rule result' }],
@@ -123,26 +132,16 @@ export const adminSectionData: Record<AdminSectionId, AdminSectionDefinition> = 
     ],
   },
   organizations: {
-    id: 'organizations', title: 'Organization Management', description: 'Verify campus organizations, manage their admins, and maintain membership status.',
-    columns: [{ key: 'name', label: 'Organization' }, { key: 'type', label: 'Type' }, { key: 'admin', label: 'Primary admin' }, { key: 'members', label: 'Members' }, { key: 'status', label: 'Status' }],
-    fields: [field('name', 'Organization name'), field('type', 'Type'), field('admin', 'Primary admin'), field('members', 'Members', 'number'), field('status', 'Status', 'select', true, ['Approved', 'Pending', 'Inactive'])],
-    rows: [
-      { id: 'org-1', name: 'Tech Club', type: 'Academic', admin: 'Moses Thomas', members: '86', status: 'Approved' },
-      { id: 'org-2', name: 'Cultural Society', type: 'Cultural', admin: 'Amina Noor', members: '124', status: 'Approved' },
-      { id: 'org-3', name: 'Debate Club', type: 'Academic', admin: 'Brian Otieno', members: '42', status: 'Pending' },
-      { id: 'org-4', name: 'Environmental Club', type: 'Community', admin: 'Mary Wanjiru', members: '58', status: 'Approved' },
-    ],
+    id: 'organizations', title: 'Organization Management', description: 'Create organizations and assign active organizer memberships required for venue booking.',
+    columns: [{ key: 'name', label: 'Organization' }, { key: 'slug', label: 'Slug' }, { key: 'type', label: 'Type' }, { key: 'status', label: 'Status' }],
+    fields: [field('name', 'Organization name'), field('slug', 'Slug'), field('type', 'Type', 'select', true, ['CLUB', 'SOCIETY', 'DEPARTMENT', 'EXTERNAL']), field('status', 'Status', 'select', true, ['ACTIVE', 'INACTIVE'])],
+    rows: [], canCreate: false, canEdit: false,
   },
   'service-providers': {
-    id: 'service-providers', title: 'Service Provider Management', description: 'Review provider profiles, service categories, verification, and platform status.',
-    columns: [{ key: 'name', label: 'Provider' }, { key: 'category', label: 'Category' }, { key: 'contact', label: 'Contact' }, { key: 'reviews', label: 'Reviews' }, { key: 'status', label: 'Status' }],
-    fields: [field('name', 'Provider name'), field('category', 'Service category'), field('contact', 'Contact email', 'email'), field('reviews', 'Review count', 'number'), field('status', 'Verification status', 'select', true, ['Approved', 'Pending review', 'Rejected'])],
-    rows: [
-      { id: 'provider-1', name: 'Royal Catering Services', category: 'Catering & refreshments', contact: 'hello@royalcatering.example', reviews: '76', status: 'Approved' },
-      { id: 'provider-2', name: 'Pocus Media Kenya', category: 'Photography & videography', contact: 'studio@pocus.example', reviews: '54', status: 'Approved' },
-      { id: 'provider-3', name: 'Sound Masters KE', category: 'Sound systems', contact: 'bookings@soundmasters.example', reviews: '38', status: 'Pending review' },
-      { id: 'provider-4', name: 'Event Decor Solutions', category: 'Decorations', contact: 'hello@eventdecor.example', reviews: '22', status: 'Pending review' },
-    ],
+    id: 'service-providers', title: 'Service Provider Management', description: 'Review provider profiles, ownership assignment, and assign requests to provider profiles.',
+    columns: [{ key: 'name', label: 'Provider' }, { key: 'category', label: 'Category' }, { key: 'owner', label: 'Owner account' }, { key: 'status', label: 'Status' }],
+    fields: [field('name', 'Provider name'), field('category', 'Service category'), field('owner', 'Owner user ID'), field('status', 'Status', 'select', true, ['ACTIVE', 'INACTIVE'])],
+    rows: [], canCreate: false, canEdit: false,
   },
   equipment: {
     id: 'equipment', title: 'Equipment Management', description: 'Maintain equipment quantities, current availability, and service status.',
@@ -208,6 +207,12 @@ export const adminSectionData: Record<AdminSectionId, AdminSectionDefinition> = 
       { id: 'audit-3', time: '2026-10-13 08:54', actor: 'Admin User', action: 'Reviewed provider profile', target: 'Sound Masters KE' },
       { id: 'audit-4', time: '2026-10-12 17:20', actor: 'Student demo', action: 'Cancelled booking; slot released', target: 'BK-1041' },
     ],
+  },
+  certificates: {
+    id: 'certificates', title: 'Certificates', description: 'Backend-issued event participation certificates and verification records.',
+    columns: [{ key: 'recipient', label: 'Recipient' }, { key: 'event', label: 'Event' }, { key: 'code', label: 'Verification code' }, { key: 'issued', label: 'Issued' }, { key: 'status', label: 'Status' }],
+    fields: [],
+    rows: [],
   },
   'system-settings': {
     id: 'system-settings', title: 'System Settings', description: 'Configure global platform preferences in this non-persistent preview.',

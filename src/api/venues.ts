@@ -44,3 +44,12 @@ export async function searchAvailability(params: AvailabilityParams) {
   })}`);
   return data;
 }
+export async function createVenue(payload: Record<string, unknown>) {
+  const { data } = await apiFetch<ApiVenue>('/venues', { method: 'POST', body: payload });
+  return data;
+}
+
+export async function updateVenue(venueId: string, payload: Record<string, unknown>) {
+  const { data } = await apiFetch<ApiVenue>(`/venues/${venueId}`, { method: 'PATCH', body: payload });
+  return data;
+}

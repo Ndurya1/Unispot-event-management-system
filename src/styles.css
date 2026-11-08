@@ -95,10 +95,15 @@ img { display: block; max-width: 100%; }
 .text-link { display: inline-flex; align-items: center; gap: 6px; color: var(--violet); font-size: 11px; font-weight: 700; }
 .text-link:hover { color: #3025cd; }
 .text-button { padding: 3px 0; border: 0; color: var(--violet); background: transparent; font-size: 10px; font-weight: 700; cursor: pointer; }
+.topbar-auth-btn { min-width: 0; padding: 7px 14px; font-size: 11px; font-weight: 700; border-radius: 8px; white-space: nowrap; }
 
 /* Home */
 .home-page { padding-top: 25px; }
-.hero-banner { position: relative; min-height: 380px; display: flex; align-items: center; overflow: hidden; padding: 44px clamp(26px, 5vw, 62px); border-radius: 19px; color: #fff; background-color: #263452; background-image: linear-gradient(90deg, rgba(10,18,40,.86) 0%, rgba(12,23,48,.62) 40%, rgba(16,29,51,.10) 100%), url('/assets/campus-courtyard.jpg'); background-size: cover; background-position: center 46%; box-shadow: var(--shadow-md); }
+.hero-banner { position: relative; min-height: 380px; display: flex; align-items: center; overflow: hidden; padding: 44px clamp(26px, 5vw, 62px); border-radius: 19px; color: #fff; background-color: #263452; box-shadow: var(--shadow-md); }
+.hero-slides { position: absolute; inset: 0; z-index: 0; }
+.hero-slide { position: absolute; inset: 0; background-size: cover; background-position: center 46%; opacity: 0; transition: opacity 1.1s ease; will-change: opacity; }
+.hero-slide--active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .hero-slide { transition: none; } }
 .hero-content { position: relative; z-index: 1; width: min(100%, 630px); }
 .hero-content h1 { margin: 14px 0 10px; font-size: clamp(40px, 5.5vw, 64px); line-height: .98; letter-spacing: -2.4px; font-weight: 800; }
 .hero-content p { margin: 0 0 20px; color: rgba(255,255,255,.87); font-size: 15px; line-height: 1.55; }
@@ -322,6 +327,11 @@ img { display: block; max-width: 100%; }
 .form-field textarea { min-height: 92px; padding-top: 10px; resize: vertical; }
 .form-field input::placeholder, .form-field textarea::placeholder { color: #a4aabd; }
 .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #aaa4ff; box-shadow: 0 0 0 3px rgba(81,70,246,.09); }
+.password-input-wrap { position: relative; }
+.password-input-wrap input { padding-right: 40px; }
+.password-toggle { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; color: #7b84a1; background: transparent; border: 0; border-radius: 6px; cursor: pointer; }
+.password-toggle:hover { color: var(--violet); background: rgba(81,70,246,.06); }
+.password-toggle:focus-visible { outline: 2px solid rgba(81,70,246,.35); outline-offset: 1px; }
 .form-error { margin: 15px 0 0; padding: 9px 11px; color: #a53d4a; background: #fff1f2; border: 1px solid #f3d1d6; border-radius: 8px; font-size: 10px; }
 .booking-form-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 21px; padding-top: 16px; border-top: 1px solid #eff0f5; }
 .review-card { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; padding: 16px; background: #fafaff; border: 1px solid #ecebff; border-radius: 11px; }
@@ -412,6 +422,12 @@ img { display: block; max-width: 100%; }
 .settings-list { display: grid; gap: 10px; }
 .settings-list label { display: flex; align-items: center; gap: 8px; color: #59627d; font-size: 10px; }
 .settings-list input { accent-color: var(--violet); }
+.danger-zone { margin-top: 16px; padding-top: 14px; border-top: 1px solid #f0d6d9; display: grid; gap: 8px; }
+.danger-zone h3 { margin: 0; color: #7a2430; font-size: 12px; display: inline-flex; align-items: center; gap: 8px; }
+.danger-zone p { margin: 0; color: #69728a; font-size: 10px; line-height: 1.6; }
+.button--danger { color: #fff; background: #c03444; border: 1px solid #a82b39; }
+.button--danger:hover { background: #aa2f3d; }
+.button--danger:disabled { opacity: .65; cursor: not-allowed; }
 .announcement-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #f0f1f5; }
 .announcement-row > div { min-width: 0; display: grid; gap: 3px; }
 .announcement-row strong { color: #313a59; font-size: 10px; }
@@ -475,7 +491,7 @@ img { display: block; max-width: 100%; }
 /* Auth pages */
 .auth-screen { min-height: 100vh; display: grid; grid-template-columns: minmax(360px,.88fr) minmax(470px,1.12fr); background: white; }
 .auth-story { position: relative; min-height: 100vh; overflow: hidden; color: white; background: #252c54; }
-.auth-story-bg { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(17,24,54,.18) 0%,rgba(19,24,53,.76) 64%,rgba(19,24,53,.96) 100%), url('/assets/campus-courtyard.jpg') center/cover; }
+.auth-story-bg { position: absolute; inset: 0; background-position: center; background-size: cover; background-repeat: no-repeat; }
 .auth-story-inner { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; padding: 27px clamp(24px,4vw,56px); }
 .auth-story .brand { color: white; }
 .auth-story .brand-copy small { color: rgba(255,255,255,.78); }

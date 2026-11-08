@@ -1,8 +1,10 @@
 import { ArrowRight, BadgeCheck, Check, ChevronRight, Monitor, QrCode, ShieldCheck, Sparkles, UsersRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Brand } from '../components/Brand';
+import { useAuth } from '../auth/AuthProvider';
 import { serviceItems, type PreviewKind } from '../data/services';
-import { events } from '../data/mock';
+
+const STUDENT_HIDDEN_SERVICE_IDS = new Set(['service-provider-directory']);
 
 function ServicePreview({ kind }: { kind: PreviewKind }) {
   if (kind === 'registration') return <div className="preview-registration"><strong>Register for Event</strong><span>Full name</span><span>Email address</span><em>Register</em></div>;
@@ -13,11 +15,15 @@ function ServicePreview({ kind }: { kind: PreviewKind }) {
 }
 
 export function ServicesPage() {
-  const heroImage = events.find((event) => event.id === 'innovation-tech-day')?.image ?? '';
+  const heroImage = '/assets/hero-campus.jpg';
+  const { user } = useAuth();
+  const roles = user?.roles || [];
+  const isStudentOnly = (roles.includes('STUDENT') || roles.includes('UNIVERSITY_STAFF')) && !roles.some((r: string) => ['ORGANIZER', 'VENUE_ADMIN', 'SERVICE_PROVIDER', 'SYSTEM_ADMIN'].includes(r));
+  const visibleServices = isStudentOnly ? serviceItems.filter((item) => !STUDENT_HIDDEN_SERVICE_IDS.has(item.id)) : serviceItems;
   return (
     <div className="services-experience">
       <section className="services-hero" aria-labelledby="services-hero-title">
-        <img className="services-hero-photo" src={heroImage} alt="Students collaborating around a laptop at a campus event" />
+        <img className="services-hero-photo" src={heroImage} alt="Students collaborating around a laptop at a campus event" loading="eager" decoding="async" fetchPriority="high" />
         <div className="services-hero-inner">
           <div className="services-hero-copy">
             <span className="services-kicker"><Sparkles size={14} /> Campus Services</span>
@@ -33,7 +39,7 @@ export function ServicesPage() {
         <section id="service-catalog" aria-labelledby="service-catalog-title">
           <div className="services-section-intro"><span className="eyebrow">WHAT WE OFFER</span><h2 id="service-catalog-title">Campus Services</h2><p>Everything you need to plan, manage and enjoy your campus events — all in one place.</p></div>
           <div className="services-catalog-grid">
-            {serviceItems.map((service) => {
+            {visibleServices.map((service) => {
               const Icon = service.icon;
               return (
                 <article className={`service-tile service-tile--${service.tone}${service.preview === 'certificate' ? ' service-tile--wide' : ''}`} key={service.id}>
