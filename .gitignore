@@ -6,3 +6,28 @@ dist/
 !.env.example
 .DS_Store
 .neon
+
+# Local runtime/build artifacts
+*.log
+*.tmp
+vite.out.log
+vite.err.log
+unispot-server/uvicorn*.log
+unispot-server/uvicorn*.err.log
+unispot-server/uvicorn*.out.log
+
+# Large image backups (keep optimized assets committed)
+public/assets/_originals/
+
+# Local one-off admin/dev scripts (not part of app source)
+unispot-server/check_schema.py
+unispot-server/check_users.py
+unispot-server/clear.py
+unispot-server/clear2.py
+unispot-server/clear3.py
+unispot-server/list_users.py
+unispot-server/make_admin.py
+unispot-server/make_admin2.py
+unispot-server/promote_user.py
+unispot-server/test_server.py
+
