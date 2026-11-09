@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies.auth import require_system_admin
+from app.api.dependencies.auth import get_current_user, require_system_admin
 from app.api.dependencies.database import get_db
 from app.models.organization import Organization
 from app.models.organization_membership import OrganizationMembership
@@ -23,6 +23,17 @@ from app.services.organization_service import (
 )
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
+
+
+@router.get("/public", response_model=list[OrganizationResponse])
+async def list_public(
+    session: AsyncSession = Depends(get_db),  # noqa: B008
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0, le=10000),
+) -> list[Organization]:
+    return await list_organizations(
+        session, limit=limit, offset=offset, include_inactive=False
+    )
 
 
 @router.post(

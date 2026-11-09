@@ -4,8 +4,23 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { adminSectionData, type AdminField, type AdminRow, type AdminSectionId } from '../../data/adminMock';
 import { AdminFeedback, AdminPageHeader, AdminPanel, AdminStatus } from './shared';
 import { AdminSpecialSection, AdminUsersSection } from './AdminSpecialSections';
+import { createVenue, listFacilities, listVenues, updateVenue } from '../../api/venues';
+import type { ApiVenue } from '../../api/types';
+import { ApiError } from '../../api/client';
 
-const specialSections = new Set<AdminSectionId>(['analytics-reports', 'notifications', 'policies-rules', 'waitlists', 'system-settings']);
+const specialSections = new Set<AdminSectionId>(['events', 'organizations', 'service-providers', 'analytics-reports', 'notifications', 'audit-logs', 'allocations', 'registrations', 'equipment', 'bookings', 'policies-rules', 'waitlists', 'maintenance', 'system-settings']);
+
+function mapVenueToRow(venue: ApiVenue): AdminRow {
+  return {
+    id: venue.id,
+    name: venue.name,
+    location: venue.location,
+    capacity: String(venue.capacity),
+    type: venue.venue_type,
+    status: venue.status,
+    image_url: venue.image_url || '',
+  } as AdminRow;
+}
 
 export function AdminSectionPage() {
   const { section = '' } = useParams();
@@ -17,14 +32,27 @@ export function AdminSectionPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState('');
   const [formValues, setFormValues] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setRows(definition?.rows ?? []);
     setFilter('');
     setNotice('');
     setEditingId('');
     setFormValues({});
     setFormOpen(searchParams.get('create') === '1');
+    if (section === 'venues') {
+      setLoading(true);
+      Promise.all([listVenues({ limit: 100 }), listFacilities()])
+        .then(([venues]) => {
+          setRows(venues.map(mapVenueToRow));
+        })
+        .catch((err) => {
+          setNotice(err instanceof ApiError ? err.message : 'Venues could not be loaded.');
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setRows(definition?.rows ?? []);
+    }
   }, [section, searchParams]);
 
   const visibleRows = useMemo(() => {
@@ -52,11 +80,41 @@ export function AdminSectionPage() {
     setFormOpen(true);
     setNotice('');
   };
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const saved = { id: editingId || `demo-${Date.now()}`, ...formValues } as AdminRow;
-    setRows((current) => editingId ? current.map((row) => row.id === editingId ? saved : row) : [saved, ...current]);
-    setNotice(`${definition.title} record ${editingId ? 'updated' : 'added'} in this preview only. No backend data was changed.`);
+    if (section === 'venues') {
+      try {
+        setLoading(true);
+        const payload: Record<string, unknown> = {
+          name: formValues.name,
+          location: formValues.location,
+          venue_type: formValues.type || formValues.venue_type || 'Hall',
+          capacity: Number(formValues.capacity) || 0,
+          status: formValues.status || 'ACTIVE',
+          description: formValues.description || null,
+          image_url: formValues.image_url || null,
+        };
+        if (editingId) {
+          await updateVenue(editingId, payload);
+          setNotice('Venue updated successfully.');
+        } else {
+          await createVenue(payload);
+          setNotice('Venue created successfully.');
+        }
+        const venues = await listVenues({ limit: 100 });
+        setRows(venues.map(mapVenueToRow));
+        setFormOpen(false);
+        setEditingId('');
+        return;
+      } catch (err) {
+        setNotice(err instanceof ApiError ? err.message : 'Venue save failed.');
+        setLoading(false);
+        return;
+      } finally {
+        setLoading(false);
+      }
+    }
+    setNotice('This admin section is not connected to a backend yet. No data was saved.');
     setFormOpen(false);
     setEditingId('');
   };
@@ -70,21 +128,26 @@ export function AdminSectionPage() {
       <AdminPanel title={`${definition.title} records`} action={<label className="admin-table-search"><Search size={15} aria-hidden="true" /><span className="sr-only">Filter {definition.title}</span><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Filter records…" /></label>}>
         {formOpen && <RecordForm fields={definition.fields} values={formValues} onChange={setFormValues} onSubmit={submit} onCancel={() => { setFormOpen(false); setEditingId(''); }} editing={Boolean(editingId)} />}
         {notice && <AdminFeedback tone="success">{notice}</AdminFeedback>}
-        <div className="admin-table-wrap">
+        {loading && <p className="admin-empty-state">Loading…</p>}
+        {!loading && (
+          <>
+            <div className="admin-table-wrap">
           <table className="admin-table"><thead><tr>{definition.columns.map((column) => <th key={column.key} scope="col">{column.label}</th>)}{definition.canEdit !== false && <th scope="col"><span className="sr-only">Actions</span></th>}</tr></thead>
             <tbody>{visibleRows.map((row) => <tr key={row.id}>{definition.columns.map((column) => <td key={column.key}>{column.key === 'status' ? <AdminStatus>{row[column.key]}</AdminStatus> : <span className={column.key === 'id' ? 'admin-mono' : ''}>{row[column.key] || '—'}</span>}</td>)}{definition.canEdit !== false && <td className="admin-table-actions"><button type="button" className="admin-row-action" onClick={() => beginEdit(row)}>Edit</button></td>}</tr>)}
               {visibleRows.length === 0 && <tr><td className="admin-empty-cell" colSpan={definition.columns.length + (definition.canEdit !== false ? 1 : 0)}>No matching records.</td></tr>}
             </tbody>
           </table>
         </div>
-        <div className="admin-table-footer"><span>Showing {visibleRows.length} of {rows.length} sample records</span><span className="admin-preview-tag">Preview data</span></div>
+        <div className="admin-table-footer"><span>Showing {visibleRows.length} of {rows.length} records</span>{section !== 'venues' && <span className="admin-preview-tag">Not fully connected</span>}</div>
+          </>
+        )}
       </AdminPanel>
     </section>
   );
 }
 
 function RecordForm({ fields, values, onChange, onSubmit, onCancel, editing }: { fields: AdminField[]; values: Record<string, string>; onChange: (value: Record<string, string>) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onCancel: () => void; editing: boolean }) {
-  return <form className="admin-record-form" onSubmit={onSubmit}><div className="admin-record-form-heading"><div><strong>{editing ? 'Edit record' : 'Add a record'}</strong><span>Changes are temporary in this interface preview.</span></div></div><div className="admin-record-fields">{fields.map((field) => <label className="admin-field" key={field.key}><span>{field.label}</span>{field.type === 'select' ? <select required={field.required} value={values[field.key] ?? ''} onChange={(event) => onChange({ ...values, [field.key]: event.target.value })}><option value="">Select {field.label.toLowerCase()}</option>{(field.options ?? []).map((option) => <option key={option}>{option}</option>)}</select> : <input required={field.required} type={field.type} min={field.type === 'number' ? 0 : undefined} value={values[field.key] ?? ''} onChange={(event) => onChange({ ...values, [field.key]: event.target.value })} />}</label>)}</div><div className="admin-form-actions"><button className="button button--outline button--small" type="button" onClick={onCancel}>Cancel</button><button className="button button--primary button--small" type="submit">{editing ? 'Save demo changes' : 'Add demo record'}</button></div></form>;
+  return <form className="admin-record-form" onSubmit={onSubmit}><div className="admin-record-form-heading"><div><strong>{editing ? 'Edit record' : 'Add a record'}</strong><span>This section may be read-only or not connected to a backend.</span></div></div><div className="admin-record-fields">{fields.map((field) => <label className="admin-field" key={field.key}><span>{field.label}</span>{field.type === 'select' ? <select required={field.required} value={values[field.key] ?? ''} onChange={(event) => onChange({ ...values, [field.key]: event.target.value })}><option value="">Select {field.label.toLowerCase()}</option>{(field.options ?? []).map((option) => <option key={option}>{option}</option>)}</select> : <input required={field.required} type={field.type} min={field.type === 'number' ? 0 : undefined} value={values[field.key] ?? ''} onChange={(event) => onChange({ ...values, [field.key]: event.target.value })} />}</label>)}</div><div className="admin-form-actions"><button className="button button--outline button--small" type="button" onClick={onCancel}>Cancel</button><button className="button button--primary button--small" type="submit">{editing ? 'Save changes' : 'Add record'}</button></div></form>;
 }
 
 function AdminSearchResults() {

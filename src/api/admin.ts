@@ -5,6 +5,8 @@ import type {
   AdminRecipientGroup,
   AdminUserStatus,
   ApiAdminUser,
+  ApiAllocation,
+  ApiAuditEvent,
   ApiBookingAnalytics,
 } from './types';
 
@@ -56,6 +58,32 @@ export async function getBookingAnalytics({ startsFrom, startsTo }: {
   if (startsTo) query.set('starts_to', startsTo);
   const suffix = query.toString() ? `?${query}` : '';
   return (await apiFetch<ApiBookingAnalytics>(`/admin/analytics/bookings${suffix}`)).data;
+}
+
+export async function listAuditEvents({ targetType, action, limit = 100, offset = 0 }: {
+  targetType?: string;
+  action?: string;
+  limit?: number;
+  offset?: number;
+} = {}): Promise<ApiAuditEvent[]> {
+  const query = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (targetType) query.set('target_type', targetType);
+  if (action) query.set('action', action);
+  return (await apiFetch<ApiAuditEvent[]>(`/admin/audit?${query}`)).data;
+}
+
+export async function listAllocations({ startsFrom, startsTo, venueId, limit = 100, offset = 0 }: {
+  startsFrom?: string;
+  startsTo?: string;
+  venueId?: string;
+  limit?: number;
+  offset?: number;
+} = {}): Promise<ApiAllocation[]> {
+  const query = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (startsFrom) query.set('starts_from', startsFrom);
+  if (startsTo) query.set('starts_to', startsTo);
+  if (venueId) query.set('venue_id', venueId);
+  return (await apiFetch<ApiAllocation[]>(`/admin/allocations?${query}`)).data;
 }
 
 export const adminRecipientGroups: Array<{ value: AdminRecipientGroup; label: string }> = [

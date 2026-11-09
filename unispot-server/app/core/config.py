@@ -51,6 +51,13 @@ class Settings(BaseSettings):
     assistant_timeout_seconds: int = Field(default=20, ge=1, le=120)
     worker_interval_seconds: int = Field(default=30, ge=1, le=3600)
 
+    # Email (Resend). When unset, auth emails are logged locally in development.
+    resend_api_key: SecretStr | None = Field(default=None, validation_alias="RESEND_API_KEY")
+    email_from: str = Field(default="UniSpot <onboarding@resend.dev>", validation_alias="EMAIL_FROM")
+    frontend_url: AnyHttpUrl = Field(default="http://localhost:5173", validation_alias="FRONTEND_URL")
+    email_verify_ttl_minutes: int = Field(default=1440, ge=5, le=10080, validation_alias="EMAIL_VERIFY_TTL_MINUTES")
+    password_reset_ttl_minutes: int = Field(default=30, ge=5, le=1440, validation_alias="PASSWORD_RESET_TTL_MINUTES")
+
     @field_validator("database_url")
     @classmethod
     def require_async_postgresql(cls, value: SecretStr) -> SecretStr:

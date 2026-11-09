@@ -7,11 +7,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.admin_allocations import router as admin_allocations_router
 from app.api.routes.admin_analytics import router as admin_analytics_router
 from app.api.routes.admin_notifications import router as admin_notifications_router
+from app.api.routes.admin_operations import router as admin_operations_router
+from app.api.routes.certificates import router as certificates_router
 from app.api.routes.assistant import router as assistant_router
 from app.api.routes.audit import router as audit_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.availability import router as availability_router
 from app.api.routes.bookings import router as bookings_router
+from app.api.routes.equipment import router as equipment_router
+from app.api.routes.events import router as events_router
+from app.api.routes.providers import router as providers_router
+from app.api.routes.scheduling import router as scheduling_router
 from app.api.routes.facilities import router as facilities_router
 from app.api.routes.health import router as health_router
 from app.api.routes.metrics import router as metrics_router
@@ -70,9 +76,15 @@ def create_application(settings: Settings | None = None) -> FastAPI:
     application.include_router(facilities_router)
     application.include_router(availability_router)
     application.include_router(bookings_router)
+    application.include_router(equipment_router)
+    application.include_router(events_router)
+    application.include_router(providers_router)
+    application.include_router(scheduling_router)
     application.include_router(admin_allocations_router)
     application.include_router(admin_analytics_router)
     application.include_router(admin_notifications_router)
+    application.include_router(admin_operations_router)
+    application.include_router(certificates_router)
     application.include_router(notifications_router)
     application.include_router(audit_router)
     application.include_router(assistant_router)

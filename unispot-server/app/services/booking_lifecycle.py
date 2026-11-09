@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -267,3 +267,37 @@ def _booking_id_from_response(response_body: dict[str, object] | None) -> UUID |
         return UUID(value)
     except ValueError:
         return None
+
+async def list_all_bookings(session: AsyncSession, *, status: BookingStatus | None = None, venue_id: UUID | None = None, starts_from: datetime | None = None, starts_to: datetime | None = None, limit: int = 200, offset: int = 0) -> list[Booking]:
+    conditions = []
+    if status is not None: conditions.append(Booking.status == status)
+    if venue_id is not None: conditions.append(Booking.venue_id == venue_id)
+    if starts_from is not None: conditions.append(Booking.starts_at >= starts_from)
+    if starts_to is not None: conditions.append(Booking.starts_at < starts_to)
+    stmt = select(Booking).options(selectinload(Booking.venue)).order_by(Booking.starts_at.desc()).limit(limit).offset(offset)
+    if conditions: stmt = stmt.where(*conditions)
+    return list((await session.execute(stmt)).scalars().all())
+
+async def admin_cancel_booking(session: AsyncSession, *, booking_id: UUID, admin: User, reason: str | None = None, idempotency_key: str = "admin-cancel", source: BookingSource = BookingSource.SYSTEM) -> Booking:
+    if not idempotency_key or len(idempotency_key) > 160:
+        raise ValueError("Idempotency-Key must contain between 1 and 160 characters")
+    await session.rollback()
+    async with session.begin():
+        booking = await session.scalar(select(Booking).options(selectinload(Booking.venue)).where(Booking.id == booking_id).with_for_update())
+        if booking is None:
+            raise CancellationError("Booking not found")
+        if booking.status is not BookingStatus.CONFIRMED:
+            raise CancellationError("Only confirmed bookings can be cancelled")
+        reservation = await session.scalar(select(VenueReservation).where(VenueReservation.id == booking.reservation_id).with_for_update())
+        booking.status = BookingStatus.CANCELLED
+        booking.cancelled_at = datetime.now(UTC)
+        booking.updated_at = booking.cancelled_at
+        booking.cancellation_reason = reason
+        if reservation is not None:
+            reservation.active = False
+        session.add(BookingEvent(booking_id=booking.id, event_type=BookingEventType.CANCELLED, actor_user_id=admin.id, source=source, reason=reason))
+        session.add(Notification(user_id=booking.requester_id, booking_id=booking.id, type=NotificationType.CANCELLED, channel=NotificationChannel.IN_APP, title="Booking cancelled by admin", body=f"Booking {booking.confirmation_code} has been cancelled by an administrator.", delivery_status=DeliveryStatus.PENDING))
+        session.add(AuditEvent(actor_user_id=admin.id, actor_type=ActorType.USER, action="ADMIN_BOOKING_CANCELLED", target_type="BOOKING", target_id=booking.id, channel=source, outcome=AuditOutcome.SUCCEEDED, event_metadata={"reason": reason} if reason else {}))
+        await session.flush()
+    metrics.add("booking_cancellations_total")
+    return booking

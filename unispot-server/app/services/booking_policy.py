@@ -33,6 +33,43 @@ class BookingPolicyError(ValueError):
         super().__init__("Booking policy validation failed")
 
 
+async def get_active_organizer_membership(
+    session: AsyncSession,
+    *,
+    user_id: UUID,
+    organization_id: UUID | None = None,
+) -> OrganizationMembership | None:
+    stmt = (
+        select(OrganizationMembership)
+        .join(Organization, Organization.id == OrganizationMembership.organization_id)
+        .where(
+            OrganizationMembership.user_id == user_id,
+            OrganizationMembership.membership_role == MembershipRole.ORGANIZER,
+            OrganizationMembership.status == MembershipStatus.ACTIVE,
+            Organization.status == OrganizationStatus.ACTIVE,
+        )
+    )
+    if organization_id is not None:
+        stmt = stmt.where(OrganizationMembership.organization_id == organization_id)
+    result = await session.execute(stmt.limit(1))
+    return result.scalar_one_or_none()
+
+
+async def require_active_organizer_membership(
+    session: AsyncSession,
+    *,
+    user: User,
+    organization_id: UUID | None = None,
+    detail: str = "An active organizer membership is required.",
+) -> OrganizationMembership:
+    if user.status is not UserStatus.ACTIVE:
+        raise BookingPolicyError([PolicyViolation("user_inactive", "The user is not active")])
+    membership = await get_active_organizer_membership(session, user_id=user.id, organization_id=organization_id)
+    if membership is None:
+        raise BookingPolicyError([PolicyViolation("organization_membership_required", detail)])
+    return membership
+
+
 async def validate_booking_policy(
     session: AsyncSession,
     *,

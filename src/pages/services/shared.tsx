@@ -40,10 +40,12 @@ export function WorkspacePanel({ title, children, action, className = '', titleI
   );
 }
 
-export function DemoMessage({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'success' | 'warning' }) {
+export function StatusMessage({ children, tone = 'info' }: { children: ReactNode; tone?: 'info' | 'success' | 'warning' }) {
   if (!children) return null;
   return <div className={`sd-message sd-message--${tone}`} role="status" aria-live="polite">{children}</div>;
 }
+
+export const DemoMessage = StatusMessage;
 
 export type ServiceTab = { id: string; label: string };
 type ServiceTabsProps = { tabs: ServiceTab[]; active: string; onChange: (id: string) => void; idPrefix: string; label: string };

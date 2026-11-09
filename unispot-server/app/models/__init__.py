@@ -1,3 +1,5 @@
+from app.models.auth_action_token import AuthActionToken as AuthActionToken
+from app.models.auth_action_token import AuthActionType as AuthActionType
 from app.models.assistant import AssistantToolCall as AssistantToolCall
 from app.models.assistant import AssistantToolCallStatus as AssistantToolCallStatus
 from app.models.assistant import Conversation as Conversation
@@ -12,6 +14,14 @@ from app.models.booking import BookingStatus as BookingStatus
 from app.models.booking import IdempotencyKey as IdempotencyKey
 from app.models.booking_event import BookingEvent as BookingEvent
 from app.models.booking_event import BookingEventType as BookingEventType
+from app.models.equipment import EquipmentItem as EquipmentItem
+from app.models.equipment import EquipmentReservation as EquipmentReservation
+from app.models.equipment import EquipmentReservationStatus as EquipmentReservationStatus
+from app.models.equipment import EquipmentStatus as EquipmentStatus
+from app.models.event import CampusEvent as CampusEvent
+from app.models.event import EventRegistration as EventRegistration
+from app.models.event import EventRegistrationStatus as EventRegistrationStatus
+from app.models.event import EventStatus as EventStatus
 from app.models.facility import Facility as Facility
 from app.models.facility import VenueFacility as VenueFacility
 from app.models.notification import DeliveryStatus as DeliveryStatus
@@ -24,10 +34,17 @@ from app.models.organization import OrganizationType as OrganizationType
 from app.models.organization_membership import MembershipRole as MembershipRole
 from app.models.organization_membership import MembershipStatus as MembershipStatus
 from app.models.organization_membership import OrganizationMembership as OrganizationMembership
-from app.models.rate_limit import RateLimitBucket as RateLimitBucket
+from app.models.provider import ProviderStatus as ProviderStatus
+from app.models.provider import ServiceProvider as ServiceProvider
+from app.models.provider import ServiceRequest as ServiceRequest
+from app.models.provider import ServiceRequestStatus as ServiceRequestStatus
 from app.models.reservation import ReservationType as ReservationType
 from app.models.reservation import VenueReservation as VenueReservation
 from app.models.role import Role as Role
+from app.models.scheduling import RecurringSchedule as RecurringSchedule
+from app.models.scheduling import RecurringStatus as RecurringStatus
+from app.models.scheduling import VenueWaitlist as VenueWaitlist
+from app.models.scheduling import WaitlistStatus as WaitlistStatus
 from app.models.user import User as User
 from app.models.user_role import UserRoles as UserRoles
 from app.models.venue import Venue as Venue
@@ -35,3 +52,5 @@ from app.models.venue import VenueStatus as VenueStatus
 from app.models.venue_block import BlockStatus as BlockStatus
 from app.models.venue_block import VenueBlock as VenueBlock
 from app.models.venue_operating_hours import VenueOperatingHours as VenueOperatingHours
+
+from app.models.operations import Certificate, MaintenanceRecord, PolicyRule, SystemSetting

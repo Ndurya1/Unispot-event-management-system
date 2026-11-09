@@ -68,6 +68,11 @@ class User(Base):
         nullable=True
     )
 
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+
     user_roles: Mapped[list["UserRoles"]] = relationship(
         "UserRoles",
         back_populates="user",

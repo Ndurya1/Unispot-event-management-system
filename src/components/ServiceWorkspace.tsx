@@ -1,23 +1,36 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Bell, BookOpen, Building2, CalendarDays, ChevronDown, Home, MapPin, Menu, Search, UsersRound, X } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Brand } from './Brand';
+import { useAuth } from '../auth/AuthProvider';
+import { hasActiveOrganizerMembership, homeForRoles } from './ProtectedRoute';
 
 type ServiceWorkspaceProps = { children: ReactNode };
 
-const workspaceLinks = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/events', label: 'Events', icon: CalendarDays },
-  { to: '/venues', label: 'Venues', icon: MapPin },
-  { to: '/organizations', label: 'Organizations', icon: UsersRound },
-  { to: '/services', label: 'Services', icon: Building2 },
-  { to: '/student/dashboard', label: 'My Bookings', icon: BookOpen },
-];
+function initials(name?: string) {
+  return (name || 'User').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() || '').join('') || 'U';
+}
 
 export function ServiceWorkspace({ children }: ServiceWorkspaceProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const roles = user?.roles || [];
+  const isStudentOnly = (roles.includes('STUDENT') || roles.includes('UNIVERSITY_STAFF')) && !roles.some((r) => ['ORGANIZER', 'VENUE_ADMIN', 'SERVICE_PROVIDER', 'SYSTEM_ADMIN'].includes(r));
+  const canAccessServicePlatform = hasActiveOrganizerMembership(user) || roles.some((r) => ['SYSTEM_ADMIN', 'SERVICE_PROVIDER'].includes(r));
+  const profileLink = homeForRoles(roles);
+  const displayName = user?.full_name || 'UniSpot user';
+  const displayRole = roles[0]?.replace(/_/g, ' ') || 'User';
+  const avatar = initials(displayName);
+  const workspaceLinks = useMemo(() => [
+    { to: '/', label: 'Home', icon: Home, end: true },
+    { to: '/events', label: 'Events', icon: CalendarDays },
+    ...(isStudentOnly ? [] : [{ to: '/venues', label: 'Venues', icon: MapPin }]),
+    { to: '/organizations', label: 'Organizations', icon: UsersRound },
+    ...(canAccessServicePlatform ? [{ to: '/services', label: 'Services', icon: Building2 }] : []),
+    { to: profileLink, label: roles.includes('ORGANIZER') || roles.includes('VENUE_ADMIN') ? 'My Bookings' : 'My Dashboard', icon: BookOpen },
+  ], [canAccessServicePlatform, isStudentOnly, profileLink, roles]);
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -61,9 +74,9 @@ export function ServiceWorkspace({ children }: ServiceWorkspaceProps) {
             </NavLink>
           ))}
         </nav>
-        <Link className="service-sidebar-account" to="/student/dashboard" aria-label="Moses Thomas, Student account">
-          <span className="service-avatar" aria-hidden="true">MT</span>
-          <span className="service-account-copy"><strong>Moses Thomas</strong><small>Student</small></span>
+        <Link className="service-sidebar-account" to={profileLink} aria-label={`${displayName}, ${displayRole} account`}>
+          <span className="service-avatar" aria-hidden="true">{avatar}</span>
+          <span className="service-account-copy"><strong>{displayName}</strong><small>{displayRole}</small></span>
           <ChevronDown size={14} aria-hidden="true" />
         </Link>
       </aside>
@@ -83,12 +96,12 @@ export function ServiceWorkspace({ children }: ServiceWorkspaceProps) {
             <button type="submit" aria-label="Search UniSpot"><Search size={15} aria-hidden="true" /></button>
           </form>
           <div className="service-workspace-actions">
-            <Link className="service-notification-button" to="/notifications" aria-label="Notifications, 3 unread">
-              <Bell size={19} aria-hidden="true" /><span aria-hidden="true">3</span>
+            <Link className="service-notification-button" to="/notifications" aria-label="Notifications">
+              <Bell size={19} aria-hidden="true" />
             </Link>
-            <Link className="service-topbar-profile" to="/student/dashboard" aria-label="Moses Thomas profile">
-              <span className="service-avatar" aria-hidden="true">MT</span>
-              <span>Moses Thomas</span>
+            <Link className="service-topbar-profile" to={profileLink} aria-label={`${displayName} profile`}>
+              <span className="service-avatar" aria-hidden="true">{avatar}</span>
+              <span>{displayName}</span>
               <ChevronDown size={14} aria-hidden="true" />
             </Link>
           </div>

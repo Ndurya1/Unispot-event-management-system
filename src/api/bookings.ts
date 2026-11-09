@@ -36,3 +36,18 @@ export async function cancelBooking(bookingId: string, reason?: string, idempote
     body: { reason },
   })).data;
 }
+
+export async function listAdminBookings(params: { status?: BookingStatus; venueId?: string; limit?: number; offset?: number } = {}) {
+  const query = new URLSearchParams({ limit: String(params.limit ?? 100), offset: String(params.offset ?? 0) });
+  if (params.status) query.set('status', params.status);
+  if (params.venueId) query.set('venue_id', params.venueId);
+  return (await apiFetch<ApiBooking[]>(`/admin/bookings?${query}`)).data;
+}
+
+export async function adminCancelBooking(bookingId: string, reason?: string, idempotencyKey: string = createIdempotencyKey()) {
+  return (await apiFetch<ApiBooking>(`/admin/bookings/${bookingId}/cancel`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey },
+    body: { reason },
+  })).data;
+}

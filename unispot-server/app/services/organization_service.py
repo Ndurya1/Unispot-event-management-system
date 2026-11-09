@@ -58,10 +58,12 @@ async def list_organizations(
     *,
     limit: int = 50,
     offset: int = 0,
+    include_inactive: bool = True,
 ) -> list[Organization]:
-    result = await session.execute(
-        select(Organization).order_by(Organization.name).limit(limit).offset(offset)
-    )
+    query = select(Organization).order_by(Organization.name)
+    if not include_inactive:
+        query = query.where(Organization.status == OrganizationStatus.ACTIVE)
+    result = await session.execute(query.limit(limit).offset(offset))
     return list(result.scalars().all())
 
 
