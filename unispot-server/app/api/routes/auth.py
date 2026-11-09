@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -121,6 +121,12 @@ async def register(
         if str(error) == "Email is already registered":
             raise HTTPException(409, "Email is already registered") from error
         raise HTTPException(422, str(error)) from error
+    except Exception:
+        logger.exception("Unexpected error during registration")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error",
+        )
 
 
 @router.post("/forgot-password", response_model=MessageResponse)

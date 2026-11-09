@@ -1,0 +1,7 @@
+{
+  "example_loads": false,
+  "example_error_type": "SettingsError",
+  "example_error_field": "allowed_origins",
+  "production_accepts_missing_email_key": true,
+  "production_default_frontend_is_localhost": true
+}

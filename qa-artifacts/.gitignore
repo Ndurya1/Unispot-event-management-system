@@ -1,0 +1,4 @@
+postgres-data/
+*.log
+browser-profile/
+node_modules/

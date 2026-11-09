@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="48" time="32.318" timestamp="2026-11-09T18:44:30.933834+03:00" hostname="NDURYA-PROBOOK"><testcase classname="tests.integration.test_database" name="test_postgresql_session_executes_select_one" time="0.118" /><testcase classname="tests.integration.test_release" name="test_atomic_conflicts_replay_back_to_back_and_cancellation" time="20.680" /><testcase classname="tests.integration.test_release" name="test_assistant_confirmation_create_retry_cancel_and_ownership" time="0.467" /><testcase classname="tests.integration.test_release" name="test_shared_rate_limit_is_atomic" time="0.223" /><testcase classname="tests.integration.test_release" name="test_worker_stops_retrying_at_cap" time="0.599" /><testcase classname="tests.integration.test_release" name="test_block_prevents_web_and_assistant_writes" time="0.644" /><testcase classname="tests.integration.test_release" name="test_provider_failure_keeps_web_booking_usable" time="0.226" /><testcase classname="tests.integration.test_release" name="test_simultaneous_same_key_replays_and_rejects_changed_payload" time="0.134" /><testcase classname="tests.integration.test_release" name="test_business_rule_boundaries" time="0.063" /><testcase classname="tests.integration.test_release" name="test_booking_requires_organizer_membership" time="0.113" /><testcase classname="tests.integration.test_release" name="test_invalid_replacement_revokes_old_confirmation" time="0.280" /><testcase classname="tests.integration.test_release" name="test_concurrent_conversation_turn_is_rejected" time="0.209" /><testcase classname="tests.integration.test_release" name="test_http_login_booking_audit_admin_and_cancellation" time="4.948" /><testcase classname="tests.test_admin_contracts" name="test_admin_announcement_uses_durable_in_app_notification_type" time="0.004" /><testcase classname="tests.test_admin_contracts" name="test_admin_announcement_rejects_unknown_recipient_group" time="0.002" /><testcase classname="tests.test_assistant" name="test_assistant_tool_contract_rejects_requester_and_sql_fields" time="0.002" /><testcase classname="tests.test_assistant" name="test_tool_payload_redaction_is_recursive" time="0.002" /><testcase classname="tests.test_assistant" name="test_write_tools_require_explicit_confirmation" time="0.007" /><testcase classname="tests.test_assistant" name="test_assistant_persists_ordered_turn_and_tool_audit" time="0.318" /><testcase classname="tests.test_assistant" name="test_conversation_is_owned_expires_and_preserves_message_order" time="0.257" /><testcase classname="tests.test_assistant_provider" name="test_rule_provider_collects_availability_fields_across_turns" time="0.006" /><testcase classname="tests.test_assistant_provider" name="test_rule_provider_never_invents_a_booking_write" time="0.004" /><testcase classname="tests.test_assistant_provider" name="test_rule_provider_maps_cancellation_to_owned_booking_tool" time="0.005" /><testcase classname="tests.test_assistant_provider" name="test_rule_provider_does_not_follow_sql_or_role_escalation_prompts" time="0.003" /><testcase classname="tests.test_auth_context" name="test_current_user_returns_roles_and_active_organizations" time="0.009"><failure message="AttributeError: 'types.SimpleNamespace' object has no attribute 'email_verified_at'">@pytest.mark.asyncio
+    async def test_current_user_returns_roles_and_active_organizations() -&gt; None:
+        user_id = uuid4()
+        organization_id = uuid4()
+        membership_id = uuid4()
+        user = cast(User, SimpleNamespace(
+            id=user_id,
+            full_name="Ada Organizer",
+            email="ada@example.com",
+            status=UserStatus.ACTIVE,
+        ))
+        membership = SimpleNamespace(
+            id=membership_id,
+            organization_id=organization_id,
+            membership_role="ORGANIZER",
+            organization=SimpleNamespace(name="Tech Club", slug="tech-club"),
+        )
+        role_result = MagicMock()
+        role_result.scalars.return_value = iter(["SYSTEM_ADMIN"])
+        membership_result = MagicMock()
+        membership_result.scalars.return_value.all.return_value = [membership]
+        session = AsyncMock()
+        session.execute.side_effect = [role_result, membership_result]
+    
+&gt;       response = await current_user(user, session)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_auth_context.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+user = namespace(id=UUID('0d7bd528-ad06-4586-8cfd-7813aaf92c8e'), full_name='Ada Organizer', email='ada@example.com', status=&lt;UserStatus.ACTIVE: 'ACTIVE'&gt;)
+session = &lt;AsyncMock id='2740335284576'&gt;
+
+    @router.get("/me", response_model=CurrentUserResponse)
+    async def current_user(
+        user: Annotated[User, Depends(get_current_user)],
+        session: Annotated[AsyncSession, Depends(get_db)],
+    ) -&gt; CurrentUserResponse:
+        role_result = await session.execute(
+            select(Role.name)
+            .join(UserRoles, UserRoles.role_id == Role.id)
+            .where(UserRoles.user_id == user.id)
+        )
+        membership_result = await session.execute(
+            select(OrganizationMembership)
+            .join(Organization, Organization.id == OrganizationMembership.organization_id)
+            .options(selectinload(OrganizationMembership.organization))
+            .where(
+                OrganizationMembership.user_id == user.id,
+                OrganizationMembership.status == MembershipStatus.ACTIVE,
+                Organization.status == OrganizationStatus.ACTIVE,
+            )
+        )
+        return CurrentUserResponse(
+            id=user.id,
+            full_name=user.full_name,
+            email=user.email,
+            status=user.status,
+&gt;           email_verified_at=user.email_verified_at,
+                              ^^^^^^^^^^^^^^^^^^^^^^
+            roles=list(role_result.scalars()),
+            organizations=[
+                {
+                    "id": membership.id,
+                    "organization_id": membership.organization_id,
+                    "name": membership.organization.name,
+                    "slug": membership.organization.slug,
+                    "membership_role": membership.membership_role,
+                }
+                for membership in membership_result.scalars().all()
+            ],
+        )
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'email_verified_at'
+
+app\api\routes\auth.py:68: AttributeError</failure></testcase><testcase classname="tests.test_booking_schema" name="test_booking_response_includes_venue_context" time="0.002" /><testcase classname="tests.test_bookings" name="test_booking_schema_requires_timezone_and_ordered_interval" time="0.007" /><testcase classname="tests.test_bookings" name="test_booking_schema_accepts_positive_attendance_and_timezone" time="0.002" /><testcase classname="tests.test_bookings" name="test_booking_status_has_no_approval_states" time="0.002" /><testcase classname="tests.test_config" name="test_test_configuration_is_safe_and_typed" time="0.004" /><testcase classname="tests.test_config" name="test_production_rejects_local_example_configuration" time="0.006" /><testcase classname="tests.test_config" name="test_secret_is_redacted_from_serialized_settings" time="0.003" /><testcase classname="tests.test_config" name="test_database_url_requires_async_postgresql" time="0.003" /><testcase classname="tests.test_hardening" name="test_error_codes_request_ids_and_redaction" time="0.016" /><testcase classname="tests.test_hardening" name="test_safe_database_and_unexpected_errors[integrity-409-integrity_conflict]" time="0.017" /><testcase classname="tests.test_hardening" name="test_safe_database_and_unexpected_errors[database-503-database_unavailable]" time="0.015" /><testcase classname="tests.test_hardening" name="test_safe_database_and_unexpected_errors[unexpected-500-internal_error]" time="0.015" /><testcase classname="tests.test_hardening" name="test_login_throttling_has_retry_guidance" time="0.020" /><testcase classname="tests.test_hardening" name="test_body_limit_ignores_spoofed_content_length" time="0.014" /><testcase classname="tests.test_hardening" name="test_openapi_error_contract_and_no_approval_controls" time="1.835" /><testcase classname="tests.test_health" name="test_health_returns_status_and_version" time="0.013" /><testcase classname="tests.test_health" name="test_readiness_hides_database_failure" time="0.014" /><testcase classname="tests.test_health" name="test_readiness_reports_available_database" time="0.010" /><testcase classname="tests.test_models" name="test_identity_models_match_documented_table_names" time="0.002" /><testcase classname="tests.test_models" name="test_memberships_prevent_duplicate_user_organization_pairs" time="0.001" /><testcase classname="tests.test_models" name="test_identity_enum_names_match_database_contract" time="0.001" /><testcase classname="tests.test_models" name="test_membership_references_restrict_parent_deletion" time="0.001" /><testcase classname="tests.test_venue_metadata" name="test_venue_response_includes_catalog_metadata_and_facility_names" time="0.001" /></testsuite></testsuites>

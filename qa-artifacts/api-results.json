@@ -1,0 +1,849 @@
+{
+  "base_url": "http://127.0.0.1:18000",
+  "route_inventory": [
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "protected": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/auth/me",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/token",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/forgot-password",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/reset-password",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/verify-email",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/resend-verification",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/refresh",
+      "protected": false
+    },
+    {
+      "method": "GET",
+      "path": "/admin/metrics",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/users",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/users/{user_id}/status",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/admin/users/{user_id}/roles",
+      "protected": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/admin/users/{user_id}/roles/{role_name}",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "protected": false
+    },
+    {
+      "method": "GET",
+      "path": "/health/readiness",
+      "protected": false
+    },
+    {
+      "method": "GET",
+      "path": "/organizations/public",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/organizations",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/organizations",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/organizations/{organization_id}",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/organizations/{organization_id}/members",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/organizations/members/{membership_id}/deactivate",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/venues",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/venues",
+      "protected": false
+    },
+    {
+      "method": "GET",
+      "path": "/venues/{venue_id}",
+      "protected": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/venues/{venue_id}",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/venues/{venue_id}/facilities",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/venues/{venue_id}/operating-hours",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/venues/{venue_id}/operating-hours",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/venues/{venue_id}/blocks",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/venues/blocks/{block_id}/cancel",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/facilities",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/facilities",
+      "protected": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/facilities/{facility_id}",
+      "protected": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/facilities/{facility_id}",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/availability",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/bookings/me",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/bookings",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/bookings/{booking_id}",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/bookings/{booking_id}/cancel",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/equipment/items",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/equipment/items",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/equipment/items/{item_id}",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/equipment/reservations",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/equipment/reservations",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/equipment/availability",
+      "protected": false
+    },
+    {
+      "method": "GET",
+      "path": "/equipment/reservations/me",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events",
+      "protected": false
+    },
+    {
+      "method": "POST",
+      "path": "/events",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events/admin",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events/manage",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/events/registrations",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events/registrations",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events/registrations/me",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events/{event_id}/registrations",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/events/registrations/{registration_id}/check-in",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events/{event_id}",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/events/{event_id}",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/events/{event_id}/cancel",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/events/{event_id}/attendance",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/providers",
+      "protected": false
+    },
+    {
+      "method": "GET",
+      "path": "/providers/me/profile",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/me/profile",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/providers/admin/all",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/admin",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/providers/admin/{provider_id}",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/providers/me/profile/{provider_id}",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/requests",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/providers/requests",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/requests/{request_id}/cancel",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/providers/requests/admin",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/requests/admin/{request_id}/assign",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/requests/admin/{request_id}/status",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/providers/requests/assigned",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/requests/assigned/{request_id}/status",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/providers/requests/assigned/{request_id}/quote",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/scheduling/waitlists",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/scheduling/recurring",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/scheduling/recurring",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/scheduling/waitlists/me",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/scheduling/waitlists/{waitlist_id}/cancel",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/scheduling/recurring/me",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/scheduling/recurring/{recurring_id}",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/allocations",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/bookings",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/admin/bookings/{booking_id}/cancel",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/analytics/bookings",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/admin/notifications",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/settings",
+      "protected": true
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/settings",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/policies",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/admin/policies",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/policies/{policy_id}",
+      "protected": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/admin/policies/{policy_id}",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/maintenance",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/admin/maintenance",
+      "protected": true
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/maintenance/{record_id}",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/certificates/verify/{verification_code}",
+      "protected": false
+    },
+    {
+      "method": "GET",
+      "path": "/certificates/me",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/certificates/issue",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/certificates",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/admin/certificates/{certificate_id}/revoke",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/notifications/me",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/notifications/{notification_id}/read",
+      "protected": true
+    },
+    {
+      "method": "GET",
+      "path": "/admin/audit",
+      "protected": true
+    },
+    {
+      "method": "POST",
+      "path": "/assistant/messages",
+      "protected": true
+    }
+  ],
+  "get_checks": [
+    {
+      "path": "/auth/me",
+      "status": 200,
+      "bytes": 430,
+      "error": null
+    },
+    {
+      "path": "/admin/metrics",
+      "status": 200,
+      "bytes": 240,
+      "error": null
+    },
+    {
+      "path": "/admin/users",
+      "status": 200,
+      "bytes": 1016,
+      "error": null
+    },
+    {
+      "path": "/health",
+      "status": 200,
+      "bytes": 33,
+      "error": null
+    },
+    {
+      "path": "/health/readiness",
+      "status": 200,
+      "bytes": 41,
+      "error": null
+    },
+    {
+      "path": "/organizations/public",
+      "status": 200,
+      "bytes": 916,
+      "error": null
+    },
+    {
+      "path": "/organizations",
+      "status": 200,
+      "bytes": 916,
+      "error": null
+    },
+    {
+      "path": "/venues",
+      "status": 200,
+      "bytes": 1576,
+      "error": null
+    },
+    {
+      "path": "/facilities",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/availability",
+      "status": 200,
+      "bytes": 1301,
+      "error": null
+    },
+    {
+      "path": "/bookings/me",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/equipment/items",
+      "status": 200,
+      "bytes": 1202,
+      "error": null
+    },
+    {
+      "path": "/equipment/reservations",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/equipment/availability",
+      "status": 200,
+      "bytes": 1473,
+      "error": null
+    },
+    {
+      "path": "/equipment/reservations/me",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/events",
+      "status": 200,
+      "bytes": 1693,
+      "error": null
+    },
+    {
+      "path": "/events/admin",
+      "status": 200,
+      "bytes": 1693,
+      "error": null
+    },
+    {
+      "path": "/events/manage",
+      "status": 200,
+      "bytes": 1693,
+      "error": null
+    },
+    {
+      "path": "/events/registrations",
+      "status": 503,
+      "bytes": 154,
+      "error": {
+        "code": "database_unavailable",
+        "message": "Database is temporarily unavailable",
+        "request_id": "d17b667c-c9b8-4384-bcae-d50a87312378",
+        "details": []
+      }
+    },
+    {
+      "path": "/events/registrations/me",
+      "status": 503,
+      "bytes": 154,
+      "error": {
+        "code": "database_unavailable",
+        "message": "Database is temporarily unavailable",
+        "request_id": "f8d58162-fae0-4468-a720-5bead807a21a",
+        "details": []
+      }
+    },
+    {
+      "path": "/providers",
+      "status": 200,
+      "bytes": 2103,
+      "error": null
+    },
+    {
+      "path": "/providers/me/profile",
+      "status": 200,
+      "bytes": 4,
+      "error": null
+    },
+    {
+      "path": "/providers/admin/all",
+      "status": 200,
+      "bytes": 2103,
+      "error": null
+    },
+    {
+      "path": "/providers/requests",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/providers/requests/admin",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/providers/requests/assigned",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/scheduling/waitlists",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/scheduling/recurring",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/scheduling/waitlists/me",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/scheduling/recurring/me",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/admin/allocations",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/admin/bookings",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/admin/analytics/bookings",
+      "status": 200,
+      "bytes": 136,
+      "error": null
+    },
+    {
+      "path": "/admin/settings",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/admin/policies",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/admin/maintenance",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/certificates/me",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/admin/certificates",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/notifications/me",
+      "status": 200,
+      "bytes": 2,
+      "error": null
+    },
+    {
+      "path": "/admin/audit",
+      "status": 200,
+      "bytes": 1696,
+      "error": null
+    }
+  ],
+  "performance": [
+    {
+      "path": "/health",
+      "requests": 20,
+      "concurrency": 4,
+      "median_ms": 43.3,
+      "p95_ms": 56.81,
+      "max_ms": 60.23,
+      "statuses": {
+        "200": 20
+      }
+    },
+    {
+      "path": "/health/readiness",
+      "requests": 20,
+      "concurrency": 4,
+      "median_ms": 28.94,
+      "p95_ms": 49.78,
+      "max_ms": 61.24,
+      "statuses": {
+        "200": 20
+      }
+    },
+    {
+      "path": "/venues",
+      "requests": 20,
+      "concurrency": 4,
+      "median_ms": 95.52,
+      "p95_ms": 113.47,
+      "max_ms": 116.91,
+      "statuses": {
+        "200": 20
+      }
+    },
+    {
+      "path": "/events",
+      "requests": 20,
+      "concurrency": 4,
+      "median_ms": 70.67,
+      "p95_ms": 137.18,
+      "max_ms": 311.12,
+      "statuses": {
+        "200": 20
+      }
+    },
+    {
+      "path": "/providers",
+      "requests": 20,
+      "concurrency": 4,
+      "median_ms": 69.6,
+      "p95_ms": 92.54,
+      "max_ms": 100.03,
+      "statuses": {
+        "200": 20
+      }
+    }
+  ]
+}

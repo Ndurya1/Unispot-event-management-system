@@ -1,0 +1,45 @@
+{
+  "checks": [
+    {
+      "name": "dynamic venue detail renders",
+      "h1": [
+        "1f9434eb-4a99-4770-b15a-286012405084"
+      ]
+    },
+    {
+      "name": "empty booking validation",
+      "message": "Please complete the event name, date, and both times to continue."
+    },
+    {
+      "name": "UI booking submission",
+      "status": 201
+    },
+    {
+      "name": "View my bookings destination",
+      "path": "/access-denied"
+    },
+    {
+      "name": "booking persisted after navigation",
+      "confirmed": true
+    },
+    {
+      "name": "UI cancellation",
+      "status": 200
+    },
+    {
+      "name": "cancellation persisted",
+      "cancelled": true
+    },
+    {
+      "name": "dynamic event detail renders",
+      "h1": [
+        "Innovation & Tech Day"
+      ]
+    },
+    {
+      "name": "mobile menu opens",
+      "expanded": "true"
+    }
+  ],
+  "errors": []
+}

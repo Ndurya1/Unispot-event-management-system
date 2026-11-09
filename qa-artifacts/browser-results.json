@@ -1,0 +1,1355 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/",
+      "textLength": 1366,
+      "heading": [
+        "Your campus.Your events.",
+        "Featured events",
+        "Make more happen here."
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/events",
+          "status": 409
+        }
+      ]
+    },
+    {
+      "route": "/events",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/events",
+      "textLength": 680,
+      "heading": [
+        "Discover campus events",
+        "Upcoming events"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/venues",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/venues",
+      "textLength": 1214,
+      "heading": [
+        "Find a venue",
+        "1f9434eb-4a99-4770-b15a-286012405084",
+        "2484f07e-4cad-46f2-87ad-bd411733298b",
+        "3c6072c4-f12b-48f5-a36d-9f37a331bd3c"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/organizations",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/organizations",
+      "textLength": 859,
+      "heading": [
+        "Campus organizations",
+        "4ccb639f-e360-4239-8b6c-4f3fe7f0d46a",
+        "55c74829-b30d-4273-8e68-c208c81c1e47",
+        "6a072578-d411-45da-b033-d744fa06d48f"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/login",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/login",
+      "textLength": 525,
+      "heading": [
+        "Your campus.Your events.",
+        "Welcome back"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/signup",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/signup",
+      "textLength": 1091,
+      "heading": [
+        "Your campus.Your events.",
+        "Create your account"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/forgot-password",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/forgot-password",
+      "textLength": 544,
+      "heading": [
+        "Your campus.Your events.",
+        "Forgot your password?"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/reset-password",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/reset-password",
+      "textLength": 521,
+      "heading": [
+        "Your campus.Your events.",
+        "Reset your password"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/verify-email",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/verify-email",
+      "textLength": 517,
+      "heading": [
+        "Your campus.Your events.",
+        "Verify your email"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [
+        "Missing verification token. Use the link from your email."
+      ],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/login",
+      "textLength": 525,
+      "heading": [
+        "Your campus.Your events.",
+        "Welcome back"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/booking/new",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/signup",
+      "textLength": 1150,
+      "heading": [
+        "Your campus.Your events.",
+        "Create your account"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/my-waitlists",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/signup",
+      "textLength": 1150,
+      "heading": [
+        "Your campus.Your events.",
+        "Create your account"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/services",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/login",
+      "textLength": 525,
+      "heading": [
+        "Your campus.Your events.",
+        "Welcome back"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/provider/dashboard",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/signup",
+      "textLength": 1150,
+      "heading": [
+        "Your campus.Your events.",
+        "Create your account"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/unknown-route",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/",
+      "textLength": 1366,
+      "heading": [
+        "Your campus.Your events.",
+        "Featured events",
+        "Make more happen here."
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/",
+      "role": "anonymous",
+      "width": 390,
+      "finalPath": "/",
+      "textLength": 1327,
+      "heading": [
+        "Your campus.Your events.",
+        "Featured events",
+        "Make more happen here."
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/events",
+      "role": "anonymous",
+      "width": 390,
+      "finalPath": "/events",
+      "textLength": 559,
+      "heading": [
+        "Discover campus events",
+        "Upcoming events"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/venues",
+      "role": "anonymous",
+      "width": 390,
+      "finalPath": "/venues",
+      "textLength": 1175,
+      "heading": [
+        "Find a venue",
+        "1f9434eb-4a99-4770-b15a-286012405084",
+        "2484f07e-4cad-46f2-87ad-bd411733298b",
+        "3c6072c4-f12b-48f5-a36d-9f37a331bd3c"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/login",
+      "role": "anonymous",
+      "width": 390,
+      "finalPath": "/login",
+      "textLength": 226,
+      "heading": [
+        "Your campus.Your events.",
+        "Welcome back"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/signup",
+      "role": "anonymous",
+      "width": 390,
+      "finalPath": "/signup",
+      "textLength": 792,
+      "heading": [
+        "Your campus.Your events.",
+        "Create your account"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/",
+      "role": "anonymous",
+      "width": 768,
+      "finalPath": "/",
+      "textLength": 1366,
+      "heading": [
+        "Your campus.Your events.",
+        "Featured events",
+        "Make more happen here."
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/events",
+      "role": "anonymous",
+      "width": 768,
+      "finalPath": "/events",
+      "textLength": 680,
+      "heading": [
+        "Discover campus events",
+        "Upcoming events"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/venues",
+      "role": "anonymous",
+      "width": 768,
+      "finalPath": "/venues",
+      "textLength": 1214,
+      "heading": [
+        "Find a venue",
+        "1f9434eb-4a99-4770-b15a-286012405084",
+        "2484f07e-4cad-46f2-87ad-bd411733298b",
+        "3c6072c4-f12b-48f5-a36d-9f37a331bd3c"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/login",
+      "role": "anonymous",
+      "width": 768,
+      "finalPath": "/login",
+      "textLength": 525,
+      "heading": [
+        "Your campus.Your events.",
+        "Welcome back"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/signup",
+      "role": "anonymous",
+      "width": 768,
+      "finalPath": "/signup",
+      "textLength": 1091,
+      "heading": [
+        "Your campus.Your events.",
+        "Create your account"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/login",
+      "role": "anonymous",
+      "width": 1440,
+      "finalPath": "/login",
+      "textLength": 525,
+      "heading": [
+        "Your campus.Your events.",
+        "Welcome back"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/organizer/dashboard",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/organizer/dashboard",
+      "textLength": 1527,
+      "heading": [
+        "Welcome back, 9c45bb88-605e-4d1d-9e66-99d632d1736e!",
+        "My events",
+        "Venue bookings",
+        "Service requests"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/booking/new",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/booking/new",
+      "textLength": 234,
+      "heading": [
+        "Venue unavailable"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/notifications",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/notifications",
+      "textLength": 487,
+      "heading": [
+        "Notifications",
+        "No notifications yet"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/my-waitlists",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/my-waitlists",
+      "textLength": 395,
+      "heading": [
+        "My Waitlists"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/services",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/services",
+      "textLength": 2000,
+      "heading": [
+        "More than just bookings —we power your campus experience.",
+        "Campus Services"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/services/event-registration-rsvp",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/services/event-registration-rsvp",
+      "textLength": 1189,
+      "heading": [
+        "Event Registration & RSVP",
+        "Innovation & Tech Day",
+        "Event details",
+        "Register for this event"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        },
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        }
+      ]
+    },
+    {
+      "route": "/services/qr-tickets-attendance",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/services/qr-tickets-attendance",
+      "textLength": 362,
+      "heading": [
+        "QR Tickets & Attendance",
+        "My Tickets",
+        "Attendance",
+        "Attendance Rate"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        },
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        }
+      ]
+    },
+    {
+      "route": "/services/service-provider-directory",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/services/service-provider-directory",
+      "textLength": 1118,
+      "heading": [
+        "Campus Service Providers",
+        "Find the right provider",
+        "Event Decor Solutions",
+        "Pocus Media Kenya"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/providers",
+          "status": 409
+        }
+      ]
+    },
+    {
+      "route": "/services/equipment-reservations",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/services/equipment-reservations",
+      "textLength": 1066,
+      "heading": [
+        "Equipment Reservations",
+        "Chairs & Tables",
+        "Laptop",
+        "Microphone"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/equipment/availability",
+          "status": 409
+        }
+      ]
+    },
+    {
+      "route": "/services/digital-certificates",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/services/digital-certificates",
+      "textLength": 996,
+      "heading": [
+        "Digital Certificates",
+        "Every great experiencedeserves to be remembered.",
+        "Certificate records"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        },
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        }
+      ]
+    },
+    {
+      "route": "/admin",
+      "role": "organizer",
+      "width": 1440,
+      "finalPath": "/access-denied",
+      "textLength": 241,
+      "heading": [
+        "Access denied"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/organizer/dashboard",
+      "role": "organizer",
+      "width": 390,
+      "finalPath": "/organizer/dashboard",
+      "textLength": 1451,
+      "heading": [
+        "Welcome back, 9c45bb88-605e-4d1d-9e66-99d632d1736e!",
+        "My events",
+        "Venue bookings",
+        "Service requests"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/student/dashboard",
+      "role": "student",
+      "width": 1440,
+      "finalPath": "/student/dashboard",
+      "textLength": 857,
+      "heading": [
+        "Good morning, QA!",
+        "Upcoming bookings",
+        "My events",
+        "Your profile"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        },
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        }
+      ]
+    },
+    {
+      "route": "/notifications",
+      "role": "student",
+      "width": 1440,
+      "finalPath": "/notifications",
+      "textLength": 472,
+      "heading": [
+        "Notifications",
+        "No notifications yet"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/my-waitlists",
+      "role": "student",
+      "width": 1440,
+      "finalPath": "/my-waitlists",
+      "textLength": 380,
+      "heading": [
+        "My Waitlists"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/services",
+      "role": "student",
+      "width": 1440,
+      "finalPath": "/services",
+      "textLength": 1758,
+      "heading": [
+        "More than just bookings —we power your campus experience.",
+        "Campus Services"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/booking/new",
+      "role": "student",
+      "width": 1440,
+      "finalPath": "/access-denied",
+      "textLength": 241,
+      "heading": [
+        "Access denied"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin",
+      "role": "student",
+      "width": 1440,
+      "finalPath": "/access-denied",
+      "textLength": 241,
+      "heading": [
+        "Access denied"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/student/dashboard",
+      "role": "student",
+      "width": 390,
+      "finalPath": "/student/dashboard",
+      "textLength": 796,
+      "heading": [
+        "Good morning, QA!",
+        "Upcoming bookings",
+        "My events",
+        "Your profile"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        },
+        {
+          "path": "/events/registrations/me",
+          "status": 503
+        }
+      ]
+    },
+    {
+      "route": "/admin",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin",
+      "textLength": 1616,
+      "heading": [
+        "Dashboard",
+        "Event Registrations Trend",
+        "Popular Venues",
+        "Recent Activity"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/users",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/users",
+      "textLength": 1480,
+      "heading": [
+        "Users",
+        "User directory"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/events",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/events",
+      "textLength": 1107,
+      "heading": [
+        "Event Management",
+        "Events"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/venues",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/venues",
+      "textLength": 1112,
+      "heading": [
+        "Venue Management",
+        "Venue Management records"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/bookings",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/bookings",
+      "textLength": 1063,
+      "heading": [
+        "Event Bookings",
+        "Bookings"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/allocations",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/allocations",
+      "textLength": 750,
+      "heading": [
+        "Resource Allocations",
+        "Allocations"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/organizations",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/organizations",
+      "textLength": 1160,
+      "heading": [
+        "Organizations",
+        "Organization records"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/service-providers",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/service-providers",
+      "textLength": 1550,
+      "heading": [
+        "Service Providers",
+        "Create provider profile",
+        "Provider records",
+        "Service requests"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/equipment",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/equipment",
+      "textLength": 1086,
+      "heading": [
+        "Equipment & Assets",
+        "Add equipment item",
+        "Inventory",
+        "Reservations"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/registrations",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/registrations",
+      "textLength": 787,
+      "heading": [
+        "Event Registrations",
+        "Registrations"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": [
+        {
+          "path": "/events/registrations",
+          "status": 503
+        },
+        {
+          "path": "/events/registrations",
+          "status": 503
+        }
+      ]
+    },
+    {
+      "route": "/admin/notifications",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/notifications",
+      "textLength": 770,
+      "heading": [
+        "Notifications",
+        "Compose announcement"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/analytics-reports",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/analytics-reports",
+      "textLength": 884,
+      "heading": [
+        "Analytics & Reports",
+        "Booking usage by venue"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/maintenance",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/maintenance",
+      "textLength": 947,
+      "heading": [
+        "Maintenance Management",
+        "Create maintenance record",
+        "Maintenance records"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/policies-rules",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/policies-rules",
+      "textLength": 1086,
+      "heading": [
+        "Booking Rules & Policies",
+        "Add policy rule",
+        "Policy rules"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/waitlists",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/waitlists",
+      "textLength": 837,
+      "heading": [
+        "Waitlists & Recurring",
+        "Waitlists",
+        "Recurring schedules"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/audit-logs",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/audit-logs",
+      "textLength": 1074,
+      "heading": [
+        "Audit Logs",
+        "Recent activity"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/certificates",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/certificates",
+      "textLength": 847,
+      "heading": [
+        "Certificates",
+        "Certificates records"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/system-settings",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/system-settings",
+      "textLength": 775,
+      "heading": [
+        "System Settings",
+        "Upsert setting",
+        "Stored settings"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin/search?q=QA",
+      "role": "system_admin",
+      "width": 1440,
+      "finalPath": "/admin/search",
+      "textLength": 706,
+      "heading": [
+        "Search results",
+        "0 matching sample records"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin",
+      "role": "system_admin",
+      "width": 390,
+      "finalPath": "/admin",
+      "textLength": 1289,
+      "heading": [
+        "Dashboard",
+        "Event Registrations Trend",
+        "Popular Venues",
+        "Recent Activity"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/provider/dashboard",
+      "role": "service_provider",
+      "width": 1440,
+      "finalPath": "/provider/dashboard",
+      "textLength": 388,
+      "heading": [
+        "Provider Dashboard"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/provider/requests",
+      "role": "service_provider",
+      "width": 1440,
+      "finalPath": "/provider/requests",
+      "textLength": 388,
+      "heading": [
+        "Provider Dashboard"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin",
+      "role": "service_provider",
+      "width": 1440,
+      "finalPath": "/access-denied",
+      "textLength": 241,
+      "heading": [
+        "Access denied"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/provider/dashboard",
+      "role": "service_provider",
+      "width": 390,
+      "finalPath": "/provider/dashboard",
+      "textLength": 388,
+      "heading": [
+        "Provider Dashboard"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/organizer/dashboard",
+      "role": "venue_admin",
+      "width": 1440,
+      "finalPath": "/organizer/dashboard",
+      "textLength": 1529,
+      "heading": [
+        "Welcome back, 6a072578-d411-45da-b033-d744fa06d48f!",
+        "My events",
+        "Venue bookings",
+        "Service requests"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/booking/new",
+      "role": "venue_admin",
+      "width": 1440,
+      "finalPath": "/booking/new",
+      "textLength": 236,
+      "heading": [
+        "Venue unavailable"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/admin",
+      "role": "venue_admin",
+      "width": 1440,
+      "finalPath": "/access-denied",
+      "textLength": 241,
+      "heading": [
+        "Access denied"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/organizer/dashboard",
+      "role": "venue_admin",
+      "width": 390,
+      "finalPath": "/organizer/dashboard",
+      "textLength": 1451,
+      "heading": [
+        "Welcome back, 6a072578-d411-45da-b033-d744fa06d48f!",
+        "My events",
+        "Venue bookings",
+        "Service requests"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    },
+    {
+      "route": "/venues",
+      "role": "network-failure",
+      "width": 1440,
+      "finalPath": "/venues",
+      "textLength": 597,
+      "heading": [
+        "Find a venue"
+      ],
+      "horizontalOverflow": false,
+      "alerts": [
+        "Venue data could not be loaded."
+      ],
+      "unlabeledInputs": [],
+      "errors": [],
+      "apiFailures": []
+    }
+  ],
+  "interactions": [
+    {
+      "name": "empty login uses native validation",
+      "valid": true
+    },
+    {
+      "name": "invalid login",
+      "alert": "Invalid email or password"
+    },
+    {
+      "name": "organizer login redirect",
+      "path": "/organizer/dashboard"
+    },
+    {
+      "name": "organizer session survives reload",
+      "samePath": true
+    },
+    {
+      "name": "student login redirect",
+      "path": "/student/dashboard"
+    },
+    {
+      "name": "student session survives reload",
+      "samePath": true
+    },
+    {
+      "name": "system_admin login redirect",
+      "path": "/admin"
+    },
+    {
+      "name": "system_admin session survives reload",
+      "samePath": true
+    },
+    {
+      "name": "service_provider login redirect",
+      "path": "/provider/dashboard"
+    },
+    {
+      "name": "service_provider session survives reload",
+      "samePath": true
+    },
+    {
+      "name": "venue_admin login redirect",
+      "path": "/organizer/dashboard"
+    },
+    {
+      "name": "venue_admin session survives reload",
+      "samePath": true
+    },
+    {
+      "name": "first keyboard focus",
+      "focused": {
+        "text": "Skip to main content",
+        "tag": "A"
+      }
+    }
+  ],
+  "errors": [],
+  "browser": "156.0.8078.80",
+  "externalBlocked": [
+    "https://fonts.googleapis.com"
+  ]
+}

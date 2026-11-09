@@ -1,0 +1,15 @@
+{
+  "tracked_files": 260,
+  "current_tree_matches": [],
+  "history_pattern_counts": {
+    "private_key": 0,
+    "aws_access_key": 0,
+    "github_token": 0,
+    "provider_key": 0
+  },
+  "tracked_environment_files": [
+    "unispot-server/.env.compose.example",
+    "unispot-server/.env.example"
+  ],
+  "limitations": "Pattern-only scan; excludes lockfiles from history; does not prove absence of secrets. Local .env contents not exported."
+}
