@@ -5,7 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_LINK_MODE=copy PATH="/app/.v
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project && \
-    groupadd --system unispot && useradd --system --gid unispot --home-dir /app unispot
+    groupadd --system unispot && useradd --system --gid unispot --home-dir /app unispot && \
+    mkdir -p /app/uploads && chown -R unispot:unispot /app/uploads
 COPY --chown=unispot:unispot app ./app
 COPY --chown=unispot:unispot alembic ./alembic
 COPY --chown=unispot:unispot alembic.ini ./
